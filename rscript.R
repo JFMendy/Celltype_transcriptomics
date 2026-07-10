@@ -864,3 +864,370 @@ ggsave(
 )
 
 
+# create functions for repeated codes ###################################
+
+# This function would extraact pair wise analyses 
+
+get_pairwise_DEGs <- function(dds_object, 
+                              cell_type_col = "cell_types", 
+                              log2FC_threshold = 1,
+                              padj_threshold = 0.05) {
+  
+  #library(dplyr)
+  #library(tibble)
+  
+  # get all unique cell types
+  cts <- levels(colData(dds_object)[[cell_type_col]])
+  
+  # generate all pairwise combinations
+  pairs <- combn(cts, 2, simplify = FALSE)
+  
+  # prepare storage lists 
+  pairwise_results <- list()
+  pairwise_summary <- list()
+  
+  # loop through pairs
+  for (pair in pairs) {
+    
+    cell1 <- pair[1]
+    cell2 <- pair[2]
+    comparison_name <- paste0(cell1, "_vs_", cell2)
+    
+    message("Processing ", comparison_name)
+    
+    # DESeq2 results
+    #first cell type  > cell1, second cell type > cell2 
+    #DEG > cell1 vs cell2 
+    #extract the results for the design cell types DEG
+    
+    res <- results(dds_object, contrast = c(cell_type_col, cell1, cell2))
+    
+    # convert to dataframe  and remove the NAs
+    res_df <- as.data.frame(res) %>%
+      rownames_to_column("gene_id") %>%
+      filter(!is.na(log2FoldChange), !is.na(padj))
+    
+    # Add gene symbols if  not available
+    if ("symbol" %in% colnames(rowData(dds_object))) {
+      res_df$symbol <- rowData(dds_object)[res_df$gene_id, "symbol"]
+    }
+    
+    # apply DEG filtering both cells 
+    
+    #first cell (cell1)
+    sig_cell1 <- res_df %>%
+      filter(log2FoldChange > log2FC_threshold,
+             padj < padj_threshold) %>%
+      arrange(desc(abs(log2FoldChange))) %>%
+      mutate(direction = paste0("higher_in_", cell1))
+    
+    # second cell (cell2)
+    sig_cell2 <- res_df %>%
+      filter(log2FoldChange < -log2FC_threshold,
+             padj < padj_threshold) %>%
+      arrange(desc(abs(log2FoldChange))) %>%
+      mutate(direction = paste0("higher_in_", cell2))
+    
+    # Combine extracted results from both cells 
+    combined_results <- bind_rows(sig_cell1, sig_cell2)
+    
+    # Store all results in a list 
+    pairwise_results[[comparison_name]] <- list(
+      higher_in_cell1 = sig_cell1,
+      higher_in_cell2 = sig_cell2,
+      combined_results = combined_results,
+      full_results = res_df            
+    )
+    
+    # Summary
+    pairwise_summary[[comparison_name]] <- data.frame(
+      comparison = comparison_name,
+      n_higher_in_cell1 = nrow(sig_cell1),
+      n_higher_in_cell2 = nrow(sig_cell2),
+      total_DEGs = nrow(combined_results)
+    )
+  }
+  
+  # Combine summary
+  summary_df <- bind_rows(pairwise_summary)
+  
+  #  return pairwise list and summary_df 
+  return(list(
+    results = pairwise_results,
+    summary = summary_df
+  ))
+}
+
+
+# create a function retrive cell of interest 
+get_higher_in_cell <- function(pairwise_output, cell_type = "B") {
+  
+  
+  # ensure the input is a list (required structure)
+  if (!is.list(pairwise_output)) {
+    stop("pairwise_output must be a list")
+  }
+  
+  
+  # Some outputs store results inside $results
+  #check if the list is not empty 
+  if (is.list(pairwise_output$results) && length(pairwise_output$results) > 0) {
+    pairwise_output <- pairwise_output$results
+  }
+  
+  
+  # intitalise a list for storage 
+  
+  higher_list <- list()
+  
+  
+  
+  #  perform a loop to go through the comparison  and save through as "x"
+  for (comp_name in names(pairwise_output)) {
+    
+    x <- pairwise_output[[comp_name]]
+    
+    # get comparison name
+    # check the comparison name is available 
+    
+    comp <- if (!is.null(x$comparison_name) && length(x$comparison_name) == 1) {
+      x$comparison_name
+    } else {
+      comp_name
+    }
+    
+    # Split comparison into two cell types
+    
+    parts <- strsplit(comp, "_vs_")[[1]]
+    
+    # Skip invalid format
+    if (length(parts) != 2) next
+    
+    
+    
+    #  Select correct table based on target cell type
+    
+    df <- NULL
+    
+    if (parts[1] == cell_type) {
+      df <- x$higher_in_cell1
+      
+    } else if (parts[2] == cell_type) {
+      df <- x$higher_in_cell2
+      
+    } else {
+      next
+    }
+    
+    
+    
+    #  convert all log2FC  to positive     
+    # Keep magnitude only (no direction)
+    if (!is.null(df) && "log2FoldChange" %in% colnames(df)) {
+      df$log2FoldChange <- abs(df$log2FoldChange)
+    }
+    
+    
+    
+    #  store valid results only 
+    
+    if (!is.null(df) && is.data.frame(df) && nrow(df) > 0) {
+      higher_list[[comp_name]] <- df
+    }
+  }
+  
+  
+  
+  # no results handling 
+  
+  if (length(higher_list) == 0) {
+    warning("No comparisons found for cell type: ", cell_type)
+    return(data.frame())
+  }
+  
+  
+  
+  # combine the outputs 
+  
+  combined_df <- dplyr::bind_rows(higher_list, .id = "comparison")
+  
+  return(combined_df)
+}
+
+
+top_genes_fn <- function(df_hd_data, top_n = Inf, min_comparisons = 1) {
+  df_hd_data %>%
+    # Fix: Use consistent column names (assuming DESeq2 standard)
+    group_by(gene_id) %>%
+    filter(n_distinct(comparison) >= min_comparisons) %>%
+    arrange(desc(log2FoldChange), padj) %>%
+    distinct(gene_id, .keep_all = TRUE) %>%
+    ungroup() %>%
+    slice_max(order_by = log2FoldChange, n = top_n, with_ties = FALSE)
+}
+
+
+create_heatmap_data <- function(dds_pairwise, 
+                                top_genes_df, 
+                                metadata_cols = "cell_types", 
+                                use_vst = TRUE) {
+  
+  
+  # check that metadata columns exist
+  
+  missing_cols <- setdiff(metadata_cols, colnames(colData(dds_pairwise)))
+  if(length(missing_cols) > 0) {
+    stop("These metadata columns are missing in colData(dds_pairwise): ", 
+         paste(missing_cols, collapse=", "))
+  }
+  
+  
+  # check that genes exist in the assay
+  
+  missing_genes <- setdiff(top_genes_df$gene_id, rownames(dds_pairwise))
+  if(length(missing_genes) > 0) {
+    warning("Some genes in top_genes_df are not found in the assay: ", 
+            paste(missing_genes, collapse=", "))
+  }
+  
+  # Keep only genes that exist
+  valid_genes <- intersect(top_genes_df$gene_id, rownames(dds_pairwise))
+  if(length(valid_genes) == 0) {
+    stop("No valid genes found in the assay. Cannot generate heatmap data.")
+  }
+  
+  
+  # transform counts
+  
+  if(use_vst) {
+    message("Using VST transformation (faster for large datasets)")
+    vsd <- vst(dds_pairwise, blind = FALSE)
+  } else {
+    message("Using rlog transformation (better for small datasets)")
+    vsd <- rlog(dds_pairwise, blind = FALSE)
+  }
+  
+  
+  # extract expression matrix for top genes
+  
+  mat <- assay(vsd)[valid_genes, , drop = FALSE]
+  
+  # Scale by row (z-score)
+  mat_scaled <- t(scale(t(mat)))
+  
+  
+  #  prepare sample annotations
+  
+  annotation_df <- as.data.frame(colData(dds_pairwise)[, metadata_cols, drop = FALSE])
+  
+  # ensure rownames match colnames of matrix
+  rownames(annotation_df) <- colnames(mat_scaled)
+  
+  
+  # return all components in a list
+  
+  return(list(
+    scaled_matrix = mat_scaled,      # Scaled expression matrix (z-score)
+    annotation_df = annotation_df,   # Sample metadata
+    top_genes = top_genes_df,        # Original top genes dataframe
+    transformation = ifelse(use_vst, "vst", "rlog")  # Transformation method used
+  ))
+}
+
+
+
+
+
+generate_heatmap <- function(heatmap_data,
+                             main_title = "Top 25 cDC1 cells markers",
+                             gene_symbols = NULL) {
+  
+  # Prepare annotation – ensure it's a data frame with one column
+  # If heatmap_data$annotation_df$cell_types is already a data frame,
+  # we convert it to a one‑column data frame with the desired name.
+  # If it's a vector, we wrap it.
+  if (is.data.frame(heatmap_data$annotation_df$cell_types)) {
+    annotation_df <- heatmap_data$annotation_df$cell_types
+    colnames(annotation_df) <- "Cell Types"
+  } else {
+    annotation_df <- data.frame(`Cell Types` = heatmap_data$annotation_df$cell_types,
+                                stringsAsFactors = FALSE)
+  }
+  
+  # Create column annotation
+  celltype_annotation <- ComplexHeatmap::HeatmapAnnotation(
+    df = annotation_df,
+    annotation_name_side = "right"
+  )
+  
+  # Row labels
+  if (!is.null(gene_symbols)) {
+    row_labels <- gene_symbols
+  } else {
+    row_labels <- rownames(heatmap_data$scaled_matrix)
+  }
+  
+  # Create the heatmap
+  ComplexHeatmap::Heatmap(
+    matrix = heatmap_data$scaled_matrix,
+    top_annotation = celltype_annotation,
+    row_labels = row_labels,
+    show_row_names = TRUE,
+    show_column_names = FALSE,
+    cluster_rows = TRUE,
+    cluster_columns = TRUE,
+    row_names_gp = grid::gpar(fontsize = 8, fontface = "bold"),
+    column_names_gp = grid::gpar(fontsize = 6),
+    col = circlize::colorRamp2(
+      seq(-2, 2, length.out = 100), 
+      colorRampPalette(c("navy", "white", "firebrick3"))(100)
+    ),
+    column_title = paste(main_title, "-", heatmap_data$transformation),
+    name = "expression",
+    border = TRUE,
+    heatmap_legend_param = list(
+      title = "expression",
+      title_position = "topcenter",
+      legend_direction = "horizontal",
+      title_gp = grid::gpar(fontsize = 10, fontface = "bold")
+    )
+  )
+}
+
+
+
+
+save_heatmap <- function(
+    plot_object,
+    file_path = ".",
+    filename = "heatmap_plot",
+    width = 10,
+    height = 6,
+    dpi = 300
+) {
+  # combine file path and filename
+  full_path <- file.path(file_path, filename)
+  
+  # add .pdf extension if not already present
+  if (!grepl("\\.pdf$", full_path, ignore.case = TRUE)) {
+    full_path <- paste0(full_path, ".pdf")
+  }
+  
+  # save as PDF
+  grDevices::pdf(full_path, width = width, height = height)
+  print(plot_object)
+  dev.off()
+  
+  message("Heatmap saved as: ", full_path)
+  return(invisible(plot_object)) # return but don't display in the console 
+}
+
+
+
+
+
+
+
+
+
+
