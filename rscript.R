@@ -8,6 +8,7 @@ library(factoextra)
 library(lolliplot)
 library(gridExtra) 
 library(grid)
+  library(ggrepel)
   
   
   
@@ -706,7 +707,7 @@ res_B_cDC1_df
 
 # create a ggMAplot for B cells against cDC1 cells 
 
-ggplot(res_B_cDC1_df, aes(x = log10(baseMean), y = log2FoldChange)) +
+b_cdc1_ma_plot <- ggplot(res_B_cDC1_df, aes(x = log10(baseMean), y = log2FoldChange)) +
   geom_point(aes(color = padj < 0.05), alpha = 0.6, size = 2) +
   scale_color_manual(
     values       = c("FALSE" = "gray60", "TRUE" = "red"),
@@ -748,5 +749,117 @@ ggplot(res_B_cDC1_df, aes(x = log10(baseMean), y = log2FoldChange)) +
   )
 
 
+# save the MA plot as a sample 
+ggsave(
+  filename = "plots/b_cdc1_ma_plot.pdf",
+  plot = b_cdc1_ma_plot,
+  width = 15,
+  height = 10,
+  units = "in"
+)
 
+
+## volcano plot 
+# prepare the data for a volcano plot 
+# colour the direction of DGE 
+
+res_B_cDC1_noNA_df <- res_B_cDC1_df %>% 
+  
+  # create new columns named as direction and Col
+  mutate(
+    direction = case_when(
+      
+      # significant with positive fold change above threshold
+      padj <= 0.05 & log2FoldChange >  1.5 ~ "high",
+      
+      # significant with negative fold change below threshold
+      padj <= 0.05 & log2FoldChange < -1.5 ~ "low",
+      
+      # everything else is not significant
+      TRUE ~ "NotSig"
+    ))
+
+
+top25cDC1_B <- res_B_cDC1_noNA_df%>%
+  filter(padj < 0.01) %>%                                     # first, keep only significant genes
+  arrange(desc(abs(log2FoldChange)), padj) %>%                # then sort
+  head(25) %>%                                                 # then take the top 25
+  pull(symbol)                                                # get only the symbol
+
+
+# create plotting groups 
+res_B_cDC1_noNA_df <- res_B_cDC1_noNA_df %>%
+  mutate(
+    plot_group = case_when(
+      symbol %in% top25cDC1_B ~ "Top DEG",
+      direction == "high" ~ "high",
+      direction == "low" ~ "low",
+      TRUE ~ "NotSig"
+    )
+  )
+
+
+b_cdc1_volcano_plot <- ggplot(res_B_cDC1_noNA_df, aes(log2FoldChange, -log10(padj))) +
+  
+  geom_point(aes(color = plot_group), alpha = 0.75, size = 3.5) +
+  
+  scale_color_manual(values = c(high = "red",
+                                low = "blue",
+                                NotSig = "gray",
+                                "Top DEG" = "darkgreen"
+  )) +
+  
+  # add thresholds
+  geom_vline(xintercept = c(-1.5, 1.5), linetype = "dashed", linewidth = 0.6) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", linewidth = 0.6) +
+  
+  #add top gene labels 
+  geom_text_repel(data = subset(res_B_cDC1_noNA_df, 
+                                symbol %in% top25cDC1_B),
+                  aes(label = symbol),
+                  size = 7,
+                  max.overlaps = Inf,
+                  box.padding = 0.4,
+                  point.padding = 0.3
+  ) +
+  # add titles 
+  labs(title = "Volcano Plot: cDC1 vs B cells Differential Expression",
+       x = "log2 Fold Change",
+       y = "-log10 Adjusted P-value",
+       color = "Expression levels"
+  ) +
+  #add theme 
+  theme_classic(base_size = 14) +
+  
+  theme(plot.title = element_text(size = 25,
+                                  face = "bold",
+                                  hjust = 0.5
+  ),
+  #axis titles
+  axis.title.x = element_text(size = 20,
+                              face = "bold"),
+  axis.title.y = element_text(size = 20, 
+                              face = "bold"),
+  
+  # Axis tick labels
+  axis.text.x = element_text(size = 15),
+  axis.text.y = element_text(size = 15),
+  
+  # Legend
+  legend.title = element_text(size = 18, face = "bold"),
+  legend.text = element_text(size = 15),
+  
+  # Legend position
+  legend.position = "right"
+  )
+
+
+# save the volcano plot as a sample 
+ggsave(
+  filename = "plots/b_cdc1_volcano_plot.pdf",
+  plot = b_cdc1_volcano_plot,
+  width = 15,
+  height = 10,
+  units = "in"
+)
 
