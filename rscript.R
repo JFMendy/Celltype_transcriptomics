@@ -9,6 +9,8 @@ library(lolliplot)
 library(gridExtra) 
 library(grid)
   library(ggrepel)
+  library(gt)
+  library(scales)
   
   
   
@@ -1223,6 +1225,191 @@ save_heatmap <- function(
 }
 
 
+
+
+######functions call ##################################################
+# pairwise call
+
+pairwise_output <- get_pairwise_DEGs(
+  dds_object = dds_pairwise,
+  cell_type_col = "cell_types",
+  log2FC_threshold = 0
+)
+
+names(pairwise_output)
+pairwise_output$summary
+
+
+# Arrange alphabetically by comparison name
+summary_tbl <- pairwise_output$summary %>%
+  arrange(comparison)
+
+
+
+summary_tbl <- summary_tbl %>%
+  rename(
+    Comparison = comparison,
+    `Up-regulated in Cell1` = n_higher_in_cell1,
+    `Up-regulated in Cell2` = n_higher_in_cell2,
+    `Total DEGs` = total_DEGs
+  )
+
+
+
+#  create compact table with three gradient colors and bold Comparison column
+gt_tbl_pub <- summary_tbl %>%
+  gt() %>%
+  
+  # Left-align all columns
+  cols_align(
+    align = "left",
+    columns = everything()
+  ) %>%
+  
+  # Shrink columns to fit content
+  cols_width(
+    everything() ~ "auto"
+  ) %>%
+  
+  # Apply gradient colors to the three key columns only
+  data_color(
+    columns = c("Up-regulated in Cell1"),
+    fn = col_numeric(palette = c("white", "#1f77b4"), domain = NULL)
+  ) %>%
+  data_color(
+    columns = c("Up-regulated in Cell2"),
+    fn = col_numeric(palette = c("white", "#ff7f0e"), domain = NULL)
+  ) %>%
+  data_color(
+    columns = c("Total DEGs"),
+    fn = col_numeric(palette = c("white", "steelblue"), domain = NULL)
+  ) %>%
+  
+  # Bold the Comparison column text
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(columns = "Comparison")
+  ) %>%
+  
+  # Row striping for readability
+  opt_row_striping() %>%
+  
+  # Reduce table height: smaller font and row padding
+  tab_options(
+    table.font.size = px(18),
+    data_row.padding = px(2)
+  )
+
+# display the table
+gt_tbl_pub
+
+
+# get all genes higher in each cell type across all comparisons
+names(pairwise_output)
+names(pairwise_output$results)
+names(pairwise_output$summary)
+
+B_up_df <- get_higher_in_cell(pairwise_output, cell_type = "B")
+# preview
+head(B_up_df)
+
+
+
+cDC1_up_df <- get_higher_in_cell(pairwise_output, cell_type = "cDC1")
+cDC2_up_df <- get_higher_in_cell(pairwise_output, cell_type = "cDC2")
+DC3_up_df <- get_higher_in_cell(pairwise_output, cell_type = "DC3")
+pDC_up_df <- get_higher_in_cell(pairwise_output, cell_type = "pDC")
+tDC_up_df <- get_higher_in_cell(pairwise_output, cell_type = "tDC")
+mo1_up_df <- get_higher_in_cell(pairwise_output, cell_type = "mo1")
+mo2_up_df <- get_higher_in_cell(pairwise_output, cell_type = "mo2")
+moint_up_df <- get_higher_in_cell(pairwise_output, cell_type = "moint")
+
+
+
+
+#check the genes present in all the files 
+mo2_up_df %>%
+  group_by(gene_id) %>%
+  summarise(n_comparisons = n_distinct(comparison)) %>%
+  arrange(desc(n_comparisons))
+
+top25_B_genes <- top_genes_fn(df_hd_data = B_up_df , top_n = 25, min_comparisons = 8) 
+top25_cDC1_genes <- top_genes_fn(df_hd_data = cDC1_up_df , top_n = 25, min_comparisons = 8) 
+top25_cDC2_genes <- top_genes_fn(df_hd_data = cDC2_up_df , top_n = 25, min_comparisons = 7) 
+top25_DC3_genes <- top_genes_fn(df_hd_data = DC3_up_df , top_n = 25, min_comparisons = 7) 
+
+top25_pDC_genes <- top_genes_fn(df_hd_data = pDC_up_df , top_n = 25, min_comparisons = 8) 
+
+top25_tDC_genes <- top_genes_fn(df_hd_data = tDC_up_df , top_n = 25, min_comparisons = 8) 
+top25_mo1_genes <- top_genes_fn(df_hd_data = mo1_up_df , top_n = 25, min_comparisons = 8) 
+top25_mo2_genes <- top_genes_fn(df_hd_data = mo2_up_df , top_n = 25, min_comparisons = 7) 
+top25_moint_genes <- top_genes_fn(df_hd_data = moint_up_df , top_n = 25, min_comparisons = 7)
+
+
+
+
+# the top 25 genes for each cell type 
+top25_B_genes$symbol
+
+top25_cDC1_genes$symbol
+top25_cDC2_genes$symbol
+top25_DC3_genes$symbol
+
+top25_pDC_genes$symbol
+top25_tDC_genes$symbol
+
+top25_mo1_genes$symbol
+top25_mo2_genes$symbol
+top25_moint_genes$symbol
+
+#find common between cell types 
+
+intersect(top25_moint_genes$symbol, top25_mo2_genes$symbol)
+
+
+
+# create a table of top 3 genes for each cell type 
+
+cell_dfs <- list(
+  "cDC1" = top25_cDC1_genes,
+  "cDC2" = top25_cDC2_genes,
+  "DC3"  = top25_DC3_genes,
+  "Bcell" = top25_B_genes,
+  "mo1"  = top25_mo1_genes,
+  "mo2"  = top25_mo2_genes,
+  "moint"  = top25_moint_genes,
+  "pDC" = top25_pDC_genes,
+  "tDC" = top25_tDC_genes
+)
+
+
+
+# extract top 3, keep stats, and combine
+top3_stats_summary <- lapply(names(cell_dfs), function(name) {
+  cell_dfs[[name]] %>%
+    slice_head(n = 3) %>%
+    mutate(cell_type = name) %>%
+    # Selecting and renaming for clarity if necessary
+    dplyr::select(cell_type, symbol, log2FoldChange, padj)
+}) %>%
+  bind_rows()
+
+# print the table
+# Formatting the table for display
+formatted_top3 <- top3_stats_summary %>%
+  rename(
+    `Cell Type` = cell_type,
+    `Gene Symbol` = symbol,
+    `log2 Fold Change` = log2FoldChange,
+    `Adjusted p-value` = padj
+  ) %>%
+  mutate(
+    `log2 Fold Change` = round(`log2 Fold Change`, 2),
+    `Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 2)
+  )
+
+# View the result
+print(formatted_top3)
 
 
 
