@@ -1257,6 +1257,7 @@ summary_tbl <- summary_tbl %>%
 
 
 #  create compact table with three gradient colors and bold Comparison column
+# create compact publication-style table with three gradient colors
 gt_tbl_pub <- summary_tbl %>%
   gt() %>%
   
@@ -1271,37 +1272,73 @@ gt_tbl_pub <- summary_tbl %>%
     everything() ~ "auto"
   ) %>%
   
-  # Apply gradient colors to the three key columns only
+  # Apply gradient colours to key columns only
   data_color(
-    columns = c("Up-regulated in Cell1"),
-    fn = col_numeric(palette = c("white", "#1f77b4"), domain = NULL)
-  ) %>%
-  data_color(
-    columns = c("Up-regulated in Cell2"),
-    fn = col_numeric(palette = c("white", "#ff7f0e"), domain = NULL)
-  ) %>%
-  data_color(
-    columns = c("Total DEGs"),
-    fn = col_numeric(palette = c("white", "steelblue"), domain = NULL)
+    columns = "Up-regulated in Cell1",
+    fn = col_numeric(
+      palette = c("white", "#1f77b4"),
+      domain = NULL
+    )
   ) %>%
   
-  # Bold the Comparison column text
+  data_color(
+    columns = "Up-regulated in Cell2",
+    fn = col_numeric(
+      palette = c("white", "#ff7f0e"),
+      domain = NULL
+    )
+  ) %>%
+  
+  data_color(
+    columns = "Total DEGs",
+    fn = col_numeric(
+      palette = c("white", "steelblue"),
+      domain = NULL
+    )
+  ) %>%
+  
+  # Bold Comparison column
   tab_style(
     style = cell_text(weight = "bold"),
     locations = cells_body(columns = "Comparison")
   ) %>%
   
-  # Row striping for readability
-  opt_row_striping() %>%
+  # Grey header + bold column names
+  tab_style(
+    style = list(
+      cell_fill(color = "grey90"),
+      cell_text(weight = "bold")
+    ),
+    locations = cells_column_labels()
+  ) %>%
   
-  # Reduce table height: smaller font and row padding
+  # Subtle borders
   tab_options(
-    table.font.size = px(18),
-    data_row.padding = px(2)
-  )
+    table.font.size = px(12),
+    data_row.padding = px(2),
+    table.border.top.color = "black",
+    table.border.bottom.color = "black",
+    table_body.hlines.color = "grey80"
+  ) %>%
+  
+  # Row striping
+  opt_row_striping()
+
+# display table
+gt_tbl_pub
 
 # display the table
 gt_tbl_pub
+
+
+
+#save the table of differential expressions
+
+gtsave(
+  gt_tbl_pub,
+  "plots/table_up_down_regulated_genes.png"
+)
+
 
 
 # get all genes higher in each cell type across all comparisons
@@ -1412,9 +1449,13 @@ formatted_top3 <- top3_stats_summary %>%
 print(formatted_top3)
 
 
-
-
-
-
+#save the table of differential expressions 
+ggsave(
+  filename = "plots/formatted_top3.pdf",
+  plot = formatted_top3,
+  width = 15,
+  height = 30,
+  units = "in"
+)
 
 
