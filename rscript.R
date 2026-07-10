@@ -1,6 +1,8 @@
 
 ##### package load #########################################################################################################
 {library(DESeq2)
+ library(biomaRt)
+  
 library(tidyverse)
 library(factoextra)
 library(lolliplot)
@@ -390,7 +392,7 @@ ggsave(
 )
 
 
-# Task 3, Principle component analysis
+####### Principle component analysis ###########################################
 
 
 #Normalisation 
@@ -594,7 +596,7 @@ print(eigen_plot)
 
 
 
-#Differential gene expression analysis 
+######### Differential gene expression analysis ################################ 
 # pairwise analysis was performed 1 vs 1
 # change coldata column name 
 names(colData(mydata_bulk_RNA2))
@@ -674,6 +676,77 @@ dds_obj <- dds_pairwise[matched_genes, ]
 rowData(dds_obj)$hgnc_symbol <- symbol_lookup[ensembl_ids_clean[matched_genes]]
 rowData(dds_obj)$gene_biotype <- biotype_lookup[ensembl_ids_clean[matched_genes]]
 rowData(dds_obj)
+
+##run DESeq 
+dds_pairwise <- DESeq(dds_obj)
+
+#check comparisons (coeffeicients)
+resultsNames(dds_pairwise)
+
+
+#retrieve the specific levels results
+
+# positive value means high expression in cDC1 and negative means high expression in B cells
+#colData(dds_pairwise)$cell_types
+res_B_cDC1 <- results(dds_pairwise, contrast = c("cell_types", "B", "cDC1"))
+
+# add symbols 
+res_B_cDC1$symbol <- rowData(dds_pairwise)[ rownames(res_B_cDC1), "symbol" ]
+res_B_cDC1$genes <- rownames(res_B_cDC1)
+
+
+
+#Now convert to df 
+res_B_cDC1_df <- as.data.frame(res_B_cDC1)
+#remove NAs
+res_B_cDC1_df <- res_B_cDC1_df[!is.na(res_B_cDC1_df$padj), ]
+
+res_B_cDC1_df
+
+
+# create a ggMAplot for B cells against cDC1 cells 
+
+ggplot(res_B_cDC1_df, aes(x = log10(baseMean), y = log2FoldChange)) +
+  geom_point(aes(color = padj < 0.05), alpha = 0.6, size = 2) +
+  scale_color_manual(
+    values       = c("FALSE" = "gray60", "TRUE" = "red"),
+    labels       = c("Not significant", "Significant"),
+    na.translate = FALSE
+  ) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  coord_cartesian(
+    ylim = c(-10, 10),
+    xlim = range(log10(res_B_cDC1_df$baseMean), na.rm = TRUE)
+  ) +
+  labs(
+    x     = "log10(mean normalized counts)",
+    y     = "log2 Fold Change",
+    title = "MA Plot (cDC1 vs B)",
+    color = "Significance"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    # Centred plot title 
+    plot.title = element_text(size = 18, face = "bold", hjust = 0.5),
+    
+    # Axis titles 
+    axis.title.x = element_text(size = 16, face = "bold"),
+    axis.title.y = element_text(size = 16, face = "bold"),
+    
+    # Axis tick labels 
+    axis.text.x = element_text(size = 14, face = "bold"),
+    axis.text.y = element_text(size = 14, face = "bold"),
+    
+    # Legend title + labels 
+    legend.title    = element_text(size = 15, face = "bold"),
+    legend.text     = element_text(size = 12, face = "bold"),
+    
+    # Legend positioned bottom-right inside plot
+    legend.position      = c(0.95, 0.05),
+    legend.justification = c(1, 0),
+    legend.background    = element_rect(fill = "white", color = "gray80")
+  )
+
 
 
 
