@@ -17,7 +17,12 @@ library(grid)
   }
 
 ##### read in the data #####################################################################################################
+## read in the bulk RNA-seq data 
+
 mydata_bulk_RNA <- readRDS(file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/bulkRNASeq/se.rds" )
+
+## read in the scRNA-seq  data
+single_cell_data <- readRDS( file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/scRNASeq_annotated/hsobj_20221209_annotated.rds")
 
 
 ##### inspect the data and extract the count data set ##################################################################### 
@@ -1138,22 +1143,11 @@ create_heatmap_data <- function(dds_pairwise,
 
 
 
-celltype_colors <- c(
-  "cDC1"  = "#1f77b4",
-  "cDC2"  = "#ff7f0e",
-  "DC3"   = "#2ca02c",
-  "Bcell" = "#9467bd",
-  "mo1"   = "#d62728",
-  "mo2"   = "#8c564b",
-  "moint" = "#e377c2",
-  "pDC"   = "#7f7f7f",
-  "tDC"   = "#bcbd22"
-)
+
 
 generate_heatmap <- function(heatmap_data,
                              main_title = "Top 25 cDC1 cells markers",
-                             gene_symbols = NULL,
-                             celltype_colors = celltype_colors) {
+                             gene_symbols = NULL) {
   
   # Prepare annotation – ensure it's a data frame with one column
   # If heatmap_data$annotation_df$cell_types is already a data frame,
@@ -1206,7 +1200,6 @@ generate_heatmap <- function(heatmap_data,
     )
   )
 }
-
 
 
 
@@ -1350,17 +1343,15 @@ gtsave(
   "plots/table_up_down_regulated_genes.png"
 )
 
+##### functions calls to identify up-regulated genes per cell ###########################################################
 
-
+## call get_higher_in_cell function 
 # get all genes higher in each cell type across all comparisons
 names(pairwise_output)
 names(pairwise_output$results)
 names(pairwise_output$summary)
 
 B_up_df <- get_higher_in_cell(pairwise_output, cell_type = "B")
-# preview
-head(B_up_df)
-
 cDC1_up_df <- get_higher_in_cell(pairwise_output, cell_type = "cDC1")
 cDC2_up_df <- get_higher_in_cell(pairwise_output, cell_type = "cDC2")
 DC3_up_df <- get_higher_in_cell(pairwise_output, cell_type = "DC3")
@@ -1371,32 +1362,26 @@ mo2_up_df <- get_higher_in_cell(pairwise_output, cell_type = "mo2")
 moint_up_df <- get_higher_in_cell(pairwise_output, cell_type = "moint")
 
 
-
-
-#check the genes present in all the files 
-mo2_up_df %>%
+#check the number number of comparisons in which the each gene is higher  for the specific cell type  
+B_up_df %>%
   group_by(gene_id) %>%
   summarise(n_comparisons = n_distinct(comparison)) %>%
   arrange(desc(n_comparisons))
 
-#call the top gene identifier function 
+###################f unction calls to find the top gene significant genes  per cell ################################ 
 
 top25_B_genes <- top_genes_fn(df_hd_data = B_up_df , top_n = 25, min_comparisons = 8) 
 top25_cDC1_genes <- top_genes_fn(df_hd_data = cDC1_up_df , top_n = 25, min_comparisons = 8) 
 top25_cDC2_genes <- top_genes_fn(df_hd_data = cDC2_up_df , top_n = 25, min_comparisons = 7) 
 top25_DC3_genes <- top_genes_fn(df_hd_data = DC3_up_df , top_n = 25, min_comparisons = 7) 
-
 top25_pDC_genes <- top_genes_fn(df_hd_data = pDC_up_df , top_n = 25, min_comparisons = 8) 
-
 top25_tDC_genes <- top_genes_fn(df_hd_data = tDC_up_df , top_n = 25, min_comparisons = 8) 
 top25_mo1_genes <- top_genes_fn(df_hd_data = mo1_up_df , top_n = 25, min_comparisons = 8) 
 top25_mo2_genes <- top_genes_fn(df_hd_data = mo2_up_df , top_n = 25, min_comparisons = 7) 
 top25_moint_genes <- top_genes_fn(df_hd_data = moint_up_df , top_n = 25, min_comparisons = 7)
 
 
-
-
-# the top 25 genes for each cell type 
+# check the top 25 genes for each cell type 
 print("The identified top 25 differential expressed genes ")
 top25_B_genes$symbol
 top25_cDC1_genes$symbol
@@ -1404,18 +1389,15 @@ top25_cDC2_genes$symbol
 top25_DC3_genes$symbol
 top25_pDC_genes$symbol
 top25_tDC_genes$symbol
-
 top25_mo1_genes$symbol
 top25_mo2_genes$symbol
 top25_moint_genes$symbol
 
-#find common between cell types 
 
+#find common between cell types 
 intersect(top25_moint_genes$symbol, top25_mo2_genes$symbol)
 
-
-
-# create a table of top 3 genes for each cell type 
+#create a list of  all cell types 
 
 cell_dfs <- list(
   "cDC1" = top25_cDC1_genes,
@@ -1429,18 +1411,21 @@ cell_dfs <- list(
   "tDC" = top25_tDC_genes
 )
 
-# extract top 3, keep stats, and combine
+# pick the top 3 for each cell type and  make a table   
 top3_stats_summary <- lapply(names(cell_dfs), function(name) {
   cell_dfs[[name]] %>%
     slice_head(n = 3) %>%
     mutate(cell_type = name) %>%
-    # Selecting and renaming for clarity if necessary
+    
+ # Selecting and renaming for clarity if necessary
     dplyr::select(cell_type, symbol, log2FoldChange, padj)
 }) %>%
   bind_rows()
 
-# print the table
-# Formatting the table for display
+top3_stats_summary
+
+
+# Format the table for display
 formatted_top3 <- top3_stats_summary %>%
   rename(
     `Cell Type` = cell_type,
@@ -1453,7 +1438,7 @@ formatted_top3 <- top3_stats_summary %>%
     `Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 2)
   )
 
-# View the result
+# preview the result
 print(formatted_top3)
 
 
@@ -1490,9 +1475,8 @@ top3_DEGs_per_celltype
 
 
 
-
+### Heatmap data preparation ###################################################################################
 # extract the top 3 genes from each df  to create heatmap 
-
 # create a list of dfs 
 dfs <- list(top25_B_genes,
             top25_cDC1_genes, 
@@ -1504,173 +1488,193 @@ dfs <- list(top25_B_genes,
             top25_tDC_genes)
 
 
+# Again pick the top 3 genes from each cell type and make global heatmap generation 
 top3_combine_genes <- imap_dfr(dfs, ~ { .x %>%
     slice_head(n = 3) %>%        # take first 3 rows
     mutate(source = .y)          # remember which df it was from
 }
 )
 
+top3_combine_genes
 
-duplicates <- top3_combine_genes %>%
-  group_by(gene_id) %>%
-  filter(n() > 1) %>%
-  ungroup()
-
-print(duplicates)
-
-
+#  pick on unique gene_id to avvoid duplicates check for duplicated gene 
 top3_unique <- top3_combine_genes %>%
   distinct(gene_id, .keep_all = TRUE)
 
 
 
 
-# function calls
+# calls the creat_heatmap_data function to prepare heatmap datasets 
 
-#data preparation function 
-heatmap_data <- create_heatmap_data(dds_pairwise = dds_pairwise,
-                                    top_genes_df = top3_combine_genes,
-                                    metadata_cols = "cell_types",
-                                    use_vst = TRUE
-)
+# global heatmap 
+heatmap_data <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                    top_genes_df = top3_combine_genes, 
+                                    metadata_cols = "cell_types", 
+                                    use_vst = TRUE)
+
+# B cells heatmap data 
+heatmap_data_B <-    create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                         top_genes_df = top25_B_genes, 
+                                         metadata_cols = "cell_types", 
+                                         use_vst = TRUE)
+
+# cDC1 
+heatmap_data_cDC1 <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                         top_genes_df = top25_cDC1_genes, 
+                                         metadata_cols = "cell_types", 
+                                         use_vst = TRUE)
+#cDC2
+
+heatmap_data_cDC2 <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                         top_genes_df = top25_cDC2_genes, 
+                                         metadata_cols = "cell_types", 
+                                         use_vst = TRUE)
+
+# DC3
+heatmap_data_DC3 <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                        top_genes_df = top25_DC3_genes, 
+                                        metadata_cols = "cell_types", 
+                                        use_vst = TRUE)
+
+# pDC
+heatmap_data_pDC <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                        top_genes_df = top25_pDC_genes, 
+                                        metadata_cols = "cell_types", 
+                                        use_vst = TRUE)
+
+# tDC
+heatmap_data_tDC <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                        top_genes_df = top25_tDC_genes, 
+                                        metadata_cols = "cell_types",
+                                        use_vst = TRUE)
+
+# mo1
+heatmap_data_mo1 <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                        top_genes_df = top25_mo1_genes, 
+                                        metadata_cols = "cell_types", 
+                                        use_vst = TRUE)
+# mo2 
+heatmap_data_mo2 <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                        top_genes_df = top25_mo2_genes, 
+                                        metadata_cols = "cell_types", 
+                                        use_vst = TRUE)
+
+#mo2 
+heatmap_data_moint <- create_heatmap_data(dds_pairwise = dds_pairwise, 
+                                          top_genes_df = top25_moint_genes, 
+                                          metadata_cols = "cell_types", 
+                                          use_vst = TRUE)
 
 
 
-# Generate heatmap function 
+
+# heatmaps  of the different cell types plus a combine cell type top 3 genes 
+# top3 combine genes (global) heatmap 
+
 heatmap_plot <- generate_heatmap(heatmap_data = heatmap_data,
-                                 main_title = "Top 25 combine markers",
-                                gene_symbols = heatmap_data$top_genes$symbol 
-)
-
+                  main_title = "Top 25 combine markers",
+                                gene_symbols = heatmap_data$top_genes$symbol
+                                )
 heatmap_plot
 
+# B cells heat map 
+
+b_cell_heatmap <- generate_heatmap(heatmap_data = heatmap_data_B,
+                                 main_title = "Top B cell markers",
+                                 gene_symbols = heatmap_data_B$top_genes$symbol
+                                 )
+
+b_cell_heatmap 
+
+# cDC1 heat map 
+cDC1_heatmap <- generate_heatmap(heatmap_data = heatmap_data_cDC1,
+                                 main_title = "Top cDC1 markers",
+                                 gene_symbols = heatmap_data_cDC1$top_genes$symbol
+                                 )
+cDC1_heatmap
+
+
+# cDC2 heat map 
+cDC2_heatmap <- generate_heatmap(heatmap_data = heatmap_data_cDC2,
+                                 main_title = "Top cDC2 markers",
+                                 gene_symbols = heatmap_data_cDC2$top_genes$symbol
+                                 )
+
+
+cDC2_heatmap
+
+
+# DC3 heat map 
+DC3_heatmap <- generate_heatmap(heatmap_data = heatmap_data_DC3 ,
+                                 main_title = "Top DC3 markers",
+                                 gene_symbols = heatmap_data_DC3$top_genes$symbol
+                                )
+
+DC3_heatmap
+
+
+# pDC heat map 
+pDC_heatmap <- generate_heatmap(heatmap_data = heatmap_data_pDC,
+                                 main_title = "Top pDC markers",
+                                 gene_symbols = heatmap_data_pDC$top_genes$symbol
+                                )
+
+pDC_heatmap
+
+
+# tDC heat map 
+tDC_heatmap <- generate_heatmap(heatmap_data = heatmap_data_tDC,
+                                 main_title = "Top tDC markers",
+                                 gene_symbols = heatmap_data_tDC$top_genes$symbol
+                                )
+
+tDC_heatmap
+
+
+# mo1 heat map 
+mo1_heatmap <- generate_heatmap(heatmap_data = heatmap_data_mo1,
+                                 main_title = "Top mo1 markers",
+                                 gene_symbols = heatmap_data_mo1$top_genes$symbol
+                                )
+
+mo1_heatmap
+
+
+
+# mo2 heat map 
+
+mo2_heatmap <- generate_heatmap(heatmap_data = heatmap_data_mo2,
+                                 main_title = "Top mo2 markers",
+                                 gene_symbols = heatmap_data_mo2$top_genes$symbol
+                                )
+mo2_heatmap
+
+
+# moint heat map 
+moint_heatmap <- generate_heatmap(heatmap_data = heatmap_data_moint,
+                                 main_title = "Top moint markers",
+                                 gene_symbols = heatmap_data_moint$top_genes$symbol
+                                 )
+moint_heatmap
 
 
 
 
 
-
-######################testing this function 
-# Fixed colours for all cell types
-celltype_colors <- c(
-  "cDC1"  = "#1f77b4",
-  "cDC2"  = "#ff7f0e",
-  "DC3"   = "#2ca02c",
-  "Bcell" = "#9467bd",
-  "mo1"   = "#d62728",
-  "mo2"   = "#8c564b",
-  "moint" = "#e377c2",
-  "pDC"   = "#7f7f7f",
-  "tDC"   = "#bcbd22"
+pdf(
+  file = "plots/top25_combine_markers_heatmap.pdf",
+  width = 10,
+  height = 6
 )
 
+ComplexHeatmap::draw(heatmap_plot)
 
-# Heatmap generation function
-generate_heatmap2 <- function(heatmap_data,
-                             main_title = "Top 25 cell markers",
-                             gene_symbols = NULL,
-                             celltype_colors = celltype_colors) {
-  
-  # Prepare annotation dataframe
-  if (is.data.frame(heatmap_data$annotation_df$cell_types)) {
-    
-    annotation_df <- heatmap_data$annotation_df$cell_types
-    colnames(annotation_df) <- "Cell Types"
-    
-  } else {
-    
-    annotation_df <- data.frame(
-      `Cell Types` = heatmap_data$annotation_df$cell_types,
-      stringsAsFactors = FALSE
-    )
-  }
-  
-  
-  # Ensure cell types are characters
-  annotation_df$`Cell Types` <- as.character(annotation_df$`Cell Types`)
-  
-  
-  # Create column annotation with fixed colours
-  celltype_annotation <- ComplexHeatmap::HeatmapAnnotation(
-    df = annotation_df,
-    col = list(
-      `Cell Types` = celltype_colors
-    ),
-    annotation_name_side = "right"
-  )
-  
-  
-  # Row labels
-  if (!is.null(gene_symbols)) {
-    
-    row_labels <- gene_symbols
-    
-  } else {
-    
-    row_labels <- rownames(heatmap_data$scaled_matrix)
-  }
-  
-  
-  # Create heatmap
-  ComplexHeatmap::Heatmap(
-    
-    matrix = heatmap_data$scaled_matrix,
-    
-    top_annotation = celltype_annotation,
-    
-    row_labels = row_labels,
-    
-    show_row_names = TRUE,
-    show_column_names = FALSE,
-    
-    cluster_rows = TRUE,
-    cluster_columns = TRUE,
-    
-    row_names_gp = grid::gpar(
-      fontsize = 8,
-      fontface = "bold"
-    ),
-    
-    column_names_gp = grid::gpar(
-      fontsize = 6
-    ),
-    
-    
-    # Expression colour scale
-    col = circlize::colorRamp2(
-      seq(-2, 2, length.out = 100),
-      colorRampPalette(
-        c("navy", "white", "firebrick3")
-      )(100)
-    ),
-    
-    
-    column_title = paste(
-      main_title,
-      "-",
-      heatmap_data$transformation
-    ),
-    
-    
-    name = "expression",
-    
-    border = TRUE,
-    
-    
-    heatmap_legend_param = list(
-      title = "expression",
-      title_position = "topcenter",
-      legend_direction = "horizontal",
-      title_gp = grid::gpar(
-        fontsize = 10,
-        fontface = "bold"
-      )
-    )
-  )
-}
+dev.off()
 
-### call the heatmap2
-generate_heatmap2(
-  heatmap_data = cDC1_heatmap,
-  main_title = "Top 25 cDC1 markers"
-)
+
+
+
+############# Single cell Analysis ####################################################################
+
+
+
