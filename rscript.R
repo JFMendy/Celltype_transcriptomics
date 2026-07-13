@@ -518,8 +518,6 @@ pca_cell_population_plot <- ggplot(pca_df,
 pca_cell_population_plot
 
 # call the ggsave function again to save the plot 
-
-
 save_plot_with_ggsave(plot_obj = pca_cell_population_plot,
                       filename = "pca_cell_population_plot.pdf",
                       width = 30,
@@ -533,8 +531,6 @@ save_plot_with_ggsave(plot_obj = pca_cell_population_plot,
   #height = 20,
   #units = "in"
 #)
-
-
 
 
 
@@ -617,7 +613,7 @@ var_table <- get_pca_variance_flags(pca_res,
 print(var_table)
 
 
-# Scree plot 
+# generate a Scree plot 
 
 elbow_point <- 6
 
@@ -686,7 +682,7 @@ eigen_plot <- fviz_eig(
 print(eigen_plot)
 
 
-# call the ggsave function 
+# call the ggsave function  to save the scree plot 
 
 save_plot_with_ggsave(plot_obj = eigen_plot,
                       filename = "eigen_plot.pdf",
@@ -788,8 +784,10 @@ resultsNames(dds_pairwise)
 
 #retrieve the specific levels results
 
-# positive value means high expression in cDC1 and negative means high expression in B cells
-#colData(dds_pairwise)$cell_types
+# positive value means high expression for instance in cDC1 and negative means high expression in B cells
+
+colData(dds_pairwise)$cell_types
+
 res_B_cDC1 <- results(dds_pairwise, contrast = c("cell_types", "B", "cDC1"))
 
 # add symbols 
@@ -805,6 +803,44 @@ res_B_cDC1_df <- res_B_cDC1_df[!is.na(res_B_cDC1_df$padj), ]
 
 res_B_cDC1_df
 
+# convert the above code into a function 
+
+get_DESeq2_results_df <- function(
+    dds_obj,
+    contrast,
+    symbol_column = "symbol"
+) {
+  
+  # Run DESeq2 contrast
+  res <- results(dds_obj,
+                 contrast = contrast
+                 )
+  
+  # Add gene symbols from rowData
+  res$symbol <- rowData(dds_obj)[
+    rownames(res),
+    symbol_column
+  ]
+  
+  # Add gene IDs
+  res$genes <- rownames(res)
+  
+  # Convert to dataframe
+  res_df <- as.data.frame(res)
+  
+  # Remove genes with missing adjusted p-values
+  res_df <- res_df[!is.na(res_df$padj), ]
+  
+  return(res_df)
+}
+
+# call the get_DEseq2_results_df function 
+res_B_cDC1_df <- get_DESeq2_results_df(
+  dds_obj = dds_pairwise,
+  contrast = c("cell_types", "B", "cDC1")
+)
+
+head(res_B_cDC1_df)
 
 # create a ggMAplot for B cells against cDC1 cells 
 
@@ -848,6 +884,103 @@ b_cdc1_ma_plot <- ggplot(res_B_cDC1_df, aes(x = log10(baseMean), y = log2FoldCha
     legend.justification = c(1, 0),
     legend.background    = element_rect(fill = "white", color = "gray80")
   )
+b_cdc1_ma_plot 
+save_plot_with_ggsave(plot_obj = b_cdc1_ma_plot,
+                      filename = "b_cdc1_ma_plot.pdf",
+                      width = 30,
+                      height = 20)
+
+
+
+# convert the above code into a function, so it is easier to generate MA plot for other comparsions 
+
+plot_MA_DESeq2_fun <- function(res_df,
+                           title = "MA Plot",
+                           padj_cutoff = 0.05
+                           ) {
+  
+  ggplot(res_df,
+         aes(x = log10(baseMean),
+             y = log2FoldChange
+             )
+         ) +
+    geom_point(aes(color = padj < padj_cutoff),
+               alpha = 0.6,
+               size = 2
+               ) +
+    
+    scale_color_manual(
+      values = c("FALSE" = "gray60",
+                 "TRUE" = "red"
+                 ),
+      labels = c("Not significant",
+                 "Significant"
+                 ),
+      na.translate = FALSE
+      ) +
+    
+    geom_hline(yintercept = 0,
+               linetype = "dashed"
+               ) +
+    
+    coord_cartesian(
+      ylim = c(-10, 10),
+      xlim = range(log10(res_df$baseMean), 
+                   na.rm = TRUE)
+      ) +
+    
+    labs(
+      x = "log10(mean normalized counts)",
+      y = "log2 Fold Change",
+      title = title,
+      color = "Significance"
+    ) +
+    
+    theme_bw(base_size = 14) +
+    
+    theme(
+      plot.title = element_text(
+        size = 18,
+        face = "bold",
+        hjust = 0.5
+        ),
+      
+      axis.title.x = element_text(size = 16,
+                                  face = "bold"
+                                  ),
+      
+      axis.title.y = element_text(size = 16,
+                                  face = "bold"
+                                  ),
+      
+      axis.text.x = element_text(size = 14,
+                                 face = "bold"
+                                 ),
+      
+      axis.text.y = element_text(size = 14,
+                                 face = "bold"
+                                 ),
+      
+      legend.title = element_text(size = 15,
+                                  face = "bold"
+                                  ),
+      
+      legend.text = element_text( size = 12,
+                                   face = "bold"
+                                  ),
+      
+      
+      legend.position = c(0.95, 0.05),
+      
+      legend.justification = c(1, 0),
+      
+      legend.background = element_rect(
+        fill = "white",
+        color = "gray80"
+      )
+    )
+}
+
 
 
 # save the MA plot as a sample 
