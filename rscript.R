@@ -62,6 +62,7 @@ str(mydata_bulk_RNA2)
 
 #check the sample information  
 colData(mydata_bulk_RNA2)
+
 # remove  columns of no interest 
 colData(mydata_bulk_RNA2)$...7 <- NULL
 colData(mydata_bulk_RNA2)$We.have.4.donors..Donor.252..253..254..255 <- NULL
@@ -94,24 +95,22 @@ colData(mydata_bulk_RNA2)$Timepoint.after.vaccination <- as.factor(colData(mydat
 mydata_bulk_RNA2 <- mydata_bulk_RNA2[
   !is.na(rowData(mydata_bulk_RNA2)$symbol), ]
 
-# double check again 
-str(colData(mydata_bulk_RNA2))
 
-
-# remove genes with less than 10 row sum count and sample less than 3 
+# extract the genes counts 
 counts <- assay(mydata_bulk_RNA2, "counts")
 
+# remove genes with less than 10 row sum count and sample less than 3 
 keep <- rowSums(counts >= 10) >= 3
 mydata_bulk_RNA2 <- mydata_bulk_RNA2[keep, ]
 
-# check if the row and column names matach
+# check if the row and column names match
 all(colnames(assay(mydata_bulk_RNA2, "counts")) == 
       rownames(colData(mydata_bulk_RNA2)))
 
 
 #### exploratory analysis  and plot generation  ########################################################################## 
 
-# extract data of interest to generate demograpgic data and gene count profile per sample 
+# extract data of interest to generate demographic data and gene count profile per sample 
 meta <- as.data.frame(colData(mydata_bulk_RNA2))
 head(meta)
 
@@ -125,7 +124,6 @@ table(meta$Cell.population)
 dim(mydata_bulk_RNA2)
 
 # extract metadata and summarize
-
 demo_table <- meta %>%
   dplyr::count(Patient, Cell.population) %>%   
   tidyr::pivot_wider(
@@ -137,25 +135,23 @@ demo_table <- meta %>%
   dplyr::arrange(Patient) %>%
   as.data.frame()
 
-#print the table 
-tail(demo_table)
+# print the table 
+head(demo_table)
 
-# generate a vector called totals  to store the row totals 
+# generate a row vector (totals) to contain samples per cell  
 totals <- demo_table %>%
   dplyr::summarise(dplyr::across(where(is.numeric), sum)) %>%
   dplyr::mutate(Patient = "Total") %>%
   dplyr::select(Patient, dplyr::everything())
 totals
 
-# join the row totals to the demo_table  
+# join the totals to the demo_table  
 demo_table_total <- dplyr::bind_rows(demo_table, totals)
 demo_table_total 
 
-#generate a more polish demogragraphic table 
-
-
-#  convert standard table to a grob for plotting
-#load the library(gridExtra) library(grid)
+# generate a more polish demographics table 
+# convert standard table to a grob for plotting
+# load the library(gridExtra) library(grid)
 
 sample_demo_table <- gridExtra::tableGrob(demo_table_total, 
                                           rows = NULL, 
@@ -170,7 +166,7 @@ sample_demo_table <- gridExtra::tableGrob(demo_table_total,
 grid::grid.newpage()
 grid::grid.draw(sample_demo_table)
 
-#save the plot 
+# save the plot 
 # wrap the plot in grid_arrange for ggplot to open it easily. 
 # Create a grob object for saving
 sample_demo_table_plot2 <- gridExtra::arrangeGrob(sample_demo_table)
@@ -183,13 +179,40 @@ ggsave(
   height = 6
 )
 
+
+# convert the above code into a function for ggsave to avoid more repeat of the code 
+
+save_plot_with_ggsave <- function(plot_obj,
+                                  filename,
+                                  width = 1,
+                                  height = 1,
+                                  units = "cm"
+                                  ) {
+  ggsave(
+    filename = file.path("plots", filename),
+    plot = plot_obj,
+    width = width,
+    height = height,
+    units = units
+  )
+  }
+
+# call the save_plot_with_ggsave 
+save_plot_with_ggsave(plot_obj = sample_demo_table_plot2, 
+          filename = "sample_demo_table.pdf",
+          width = 10,
+          height = 6
+          )
+
 # extract the gene counts information 
-## generate gene count plot
+# generate gene count plot
 # Use the gene_count_per_sample table 
 # order samples by total_gene_counts for nicer visualization
 # add a column called total_gene_count 
-meta$total_gene_counts <- colSums(counts)
-#create table: sampleName, cell type, total counts
+
+meta$total_gene_counts <- colSums(counts)    # calculate the total genes per sample  and save it in a column total_gene_counts 
+
+#create a table with column names: sampleName, cell type, total counts
 gene_count_per_sample <- meta %>%
   dplyr::select(sampleName, Cell.population, total_gene_counts) %>%    #  needed columns 
   dplyr::arrange(Cell.population, total_gene_counts) %>%                 # order base on  total_gene_counts
@@ -199,7 +222,6 @@ head(gene_count_per_sample)
 
 #remove any missing value or NAs
 # prepare the data for plotting 
-
 gene_count_clean <- gene_count_per_sample %>%
   filter(!is.na(total_gene_counts) & !is.na(Cell.population))
 
@@ -270,20 +292,28 @@ gene_count_plot <- ggplot(gene_count_clean,
 
 gene_count_plot
 
-#save the plot 
+# call the save_plot_with_ggsave function to save this plot 
 
-ggsave(
-  filename = "plots/gene_count_plot.pdf",
-  plot = gene_count_plot,
-  width = 35,
-  height = 20,
-  units = "in"
-)
+save_plot_with_ggsave(plot_obj = gene_count_plot,
+                      filename = "gene_count_plot.pdf",
+                      width = 35,
+                      height = 20,
+                      units = "cm")
+
+
+#ggsave(
+  #filename = "plots/gene_count_plot.pdf",
+ # plot = gene_count_plot,
+ # width = 35,
+  #height = 20,
+ # units = "in"
+#)
 
 # arrange liliplot in ascending order 
 # extract the count matrixs 
 df_counts <- assay(mydata_bulk_RNA2, "counts")
 
+head(df_counts)
 
 # turn into a tibble in long format
 df_long <- as_tibble(df_counts, rownames = "gene") %>% 
@@ -293,7 +323,7 @@ df_long <- as_tibble(df_counts, rownames = "gene") %>%
     values_to = "count"
   )
 
-
+head(df_long)
 
 # Compute QC metrics per sample
 df_detected_qc_metrics <- df_long %>%
@@ -309,9 +339,6 @@ df_detected_qc_metrics <- df_long %>%
 
 #Library Size Barplot: Samples with lower total counts may indicate low sequencing depth or a problem with that sample
 df_detected_qc_metrics
-
-
-
 
 # convert the sample column to a factor levels 
 df_detected_qc_metrics <- as.data.frame(df_detected_qc_metrics)
@@ -391,32 +418,42 @@ df_detected_qc_metrics_plot <- ggplot(df_detected_qc_metrics,
 
 df_detected_qc_metrics_plot 
 
-# save the plot 
+#  call the ggsave function to save the plot 
 
-ggsave(
-  filename = "plots/df_detected_qc_metrics_plot.pdf",
-  plot = df_detected_qc_metrics_plot,
-  width = 30,
-  height = 20,
-  units = "in"
-)
+save_plot_with_ggsave(plot_obj = df_detected_qc_metrics_plot,
+                      filename = "df_detected_qc_metrics_plot.pdf",
+                      width = 30,
+                      height = 20,
+                      units = "cm")
+
+
+#ggsave(
+ # filename = "plots/df_detected_qc_metrics_plot.pdf",
+ # plot = df_detected_qc_metrics_plot,
+ # width = 30,
+  #height = 20,
+  #units = "in"
+#)
 
 
 ####### Principle component analysis ###########################################
 
-
-#Normalisation 
+# Normalisation 
 # extract TPM matrix
 tpms <- assay(mydata_bulk_RNA2, 'tpms')
+
 # filter out zero values 
 tpms <- tpms[rowSums(tpms != 0) > 0, ]
 sum(is.nan(tpms))
 
+# add constant to avoid 
 # log-transform + constant value 
 mat <- log2(tpms + 0.55)  
 
 # transpose so samples are rows
 mat_t <- t(mat)
+
+
 # perform PCA
 pca_result <- prcomp(mat_t)  # already scaled
 summary(pca_result)
@@ -480,14 +517,22 @@ pca_cell_population_plot <- ggplot(pca_df,
   )
 pca_cell_population_plot
 
-#save the plot 
-ggsave(
-  filename = "plots/pca_cell_population_plot.pdf",
-  plot = pca_cell_population_plot,
-  width = 30,
-  height = 20,
-  units = "in"
-)
+# call the ggsave function again to save the plot 
+
+
+save_plot_with_ggsave(plot_obj = pca_cell_population_plot,
+                      filename = "pca_cell_population_plot.pdf",
+                      width = 30,
+                      height = 20,
+                      units = "cm")
+
+#ggsave(
+  #filename = "plots/pca_cell_population_plot.pdf",
+  #plot = pca_cell_population_plot,
+  #width = 30,
+  #height = 20,
+  #units = "in"
+#)
 
 
 
@@ -505,11 +550,11 @@ get_pca_variance_flags <- function(pca_obj,
   # max_N: if not NULL, only consider first max_N PCs
   # percent: whether to return % (default = TRUE) or fraction (FALSE)
   
-  sdev <- pca_obj$sdev
-  vars  <- sdev^2
-  prop  <- vars / sum(vars)
-  if (percent) prop <- prop * 100
-  cum   <- cumsum(prop)
+  sdev <- pca_obj$sdev                # extract the stored standard deviations (sdev) for each pc
+  vars  <- sdev^2                      # convert the sdev to variance by squaring the sdev ( variance = sd^2)
+  prop  <- vars / sum(vars)            # proportion of variance = (var of pc)/sum(variance)
+  if (percent) prop <- prop * 100      # convert to % 
+  cum   <- cumsum(prop)                 #n cal. cumulative variance 
   
   # If max_N specified, subset
   if (!is.null(max_N)) {
@@ -517,6 +562,7 @@ get_pca_variance_flags <- function(pca_obj,
     cum  <- cum[1:max_N]
   }
   
+  # create a summary table 
   df <- data.frame(
     PC                = seq_along(prop),
     var_explained     = prop,
@@ -533,10 +579,13 @@ get_pca_variance_flags <- function(pca_obj,
 
 # extract the tpms 
 tpms <- assay(mydata_bulk_RNA2, 'tpms')
+
 # filter out zero values 
 tpms <- tpms[rowSums(tpms != 0) > 0, ]
 sum(is.nan(tpms))
 
+# many RNA-seq TPM = 0 
+# log2(0)  = neg. infinity, hence add a constant to offset the problem 
 # log-transform + constant value 
 mat <- log2(tpms + 0.55)  
 
@@ -568,39 +617,82 @@ var_table <- get_pca_variance_flags(pca_res,
 print(var_table)
 
 
-
-
 # Scree plot 
-eigen_plot <- fviz_eig(pca_result,
-                       choice  = "variance",
-                       ncp     = 15,                 # only first 15 PCs
-                       geom    = c("bar", "line"),
-                       barfill = "navy",
-                       barcolor= "black",
-                       linecolor = "red",
-                       addlabels = TRUE,
-                       hjust   = -0.3,
-                       size = 10 ) +            # adjust label position
-  ylim(0, 20) +                         # y-axis limit: up to 50% variance
-  geom_hline(yintercept = 5,            # horizontal line at 5% threshold
-             linetype = "dashed", color = "gray50",
-             size = 1) +
+
+elbow_point <- 6
+
+eigen_plot <- fviz_eig(
+  pca_result,
+  choice  = "variance",
+  ncp     = 15,
+  geom    = c("bar", "line"),
+  barfill = "gray50",
+  barcolor = "black",
+  linecolor = "red",
+  addlabels = TRUE,
+  hjust = -0.3,
+  size = 10
+) +
+  ylim(0, 20) +
+  
+  # horizontal threshold line
+  geom_hline(
+    aes(yintercept = 5, linetype = "5% variance threshold"),
+    color = "blue",
+    size = 1
+  ) +
+  
+  # elbow line
+  geom_vline(
+    aes(xintercept = elbow_point, linetype = "Elbow point (PC6)"),
+    color = "green",
+    size = 1
+  ) +
+  
+  scale_linetype_manual(
+    name = "Reference lines",
+    values = c(
+      "5% variance threshold" = "dashed",
+      "Elbow point (PC5)" = "dashed"
+    )
+  ) +
+  
   labs(
     title = "Scree Plot — Variance Explained",
     x = "Principal Components (PC)",
     y = "Percent Variance Explained"
   ) +
+  
   theme_minimal(base_size = 14) +
   theme(
-    plot.title   = element_text(face = "bold", hjust = 0.5),
-    axis.title   = element_text(face = "bold"),
-    axis.text.x  = element_text(angle = 45, hjust = 1, 
-                                face = "bold", color = "black", size = 12 ),
-    axis.text.y = element_text(face = "bold", color = "black", size = 11)
-    
+    plot.title = element_text(face = "bold", hjust = 0.5),
+    axis.title = element_text(face = "bold"),
+    axis.text.x = element_text(
+      angle = 45,
+      hjust = 1,
+      face = "bold",
+      color = "black",
+      size = 12
+    ),
+    axis.text.y = element_text(
+      face = "bold",
+      color = "black",
+      size = 11
+    ),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(face = "bold")
   )
 
 print(eigen_plot)
+
+
+# call the ggsave function 
+
+save_plot_with_ggsave(plot_obj = eigen_plot,
+                      filename = "eigen_plot.pdf",
+                      width = 25,
+                      height = 30,
+                      units = "cm")
 
 
 
