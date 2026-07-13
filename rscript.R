@@ -1,24 +1,25 @@
 
-##### package load #########################################################################################################
+# MSc Thesis Analysis: Bulk and single cell RNA-seq dataset
+#=======================================================================================================================================================
+
+
+# 0.1 package load =====================================================================================================================================
 {library(DESeq2)
- library(biomaRt)
-  
-library(tidyverse)
-library(factoextra)
-library(lolliplot)
-library(gridExtra) 
-library(grid)
+  library(biomaRt)
+  library(tidyverse)
+  library(factoextra)
+  library(lolliplot)
+  library(gridExtra) 
+  library(grid)
   library(ggrepel)
   library(gt)
   library(scales)
   library(kableExtra)
   library(Seurat)
   library(presto)
-  
-  
   }
 
-##### read in the data #####################################################################################################
+# 0.2 read in the data ----
 ## read in the bulk RNA-seq data 
 
 mydata_bulk_RNA <- readRDS(file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/bulkRNASeq/se.rds" )
@@ -26,12 +27,15 @@ mydata_bulk_RNA <- readRDS(file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thes
 ## read in the scRNA-seq  data
 single_cell_data <- readRDS( file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/scRNASeq_annotated/hsobj_20221209_annotated.rds")
 
+#######  Bulk RNA-seq Analysis ##############################################################################################################################################################################################################
 
-##### inspect the data and extract the count data set ##################################################################### 
-# make a copy of original data 
+
+# 1. Data inspect the data and extract the count data set ===========================
+## 1.1 make a copy of original data---- 
 mydata_bulk_RNA2 <- mydata_bulk_RNA
 
-# check the assays available in the summerisedExperiment 
+## 1.2 Inspect the SummerisedExperiemnt structure ----- 
+# Check available assays
 assayNames(mydata_bulk_RNA2)  
 
 # colData column  and rowData names 
@@ -58,9 +62,8 @@ glimpse(mydata_bulk_RNA2)
 str(mydata_bulk_RNA2)
 
 
-#### data wrangling and clean ##############################################################################################
-
-#check the sample information  
+# 2. data wrangling and clean =================================================================
+# check the sample information 
 colData(mydata_bulk_RNA2)
 
 # remove  columns of no interest 
@@ -90,11 +93,9 @@ colData(mydata_bulk_RNA2)$Patient <- as.factor(colData(mydata_bulk_RNA2)$Patient
 
 colData(mydata_bulk_RNA2)$Timepoint.after.vaccination <- as.factor(colData(mydata_bulk_RNA2)$Timepoint.after.vaccination)
 
-
 # remove genes with no symbols 
 mydata_bulk_RNA2 <- mydata_bulk_RNA2[
   !is.na(rowData(mydata_bulk_RNA2)$symbol), ]
-
 
 # extract the genes counts 
 counts <- assay(mydata_bulk_RNA2, "counts")
@@ -108,9 +109,9 @@ all(colnames(assay(mydata_bulk_RNA2, "counts")) ==
       rownames(colData(mydata_bulk_RNA2)))
 
 
-#### exploratory analysis  and plot generation  ########################################################################## 
-
-# extract data of interest to generate demographic data and gene count profile per sample 
+# 3 exploratory analysis and visualisation ====================================================================
+## 3.1 demographic: -----
+#extract data of interest to generate demographic data and gene count profile per sample 
 meta <- as.data.frame(colData(mydata_bulk_RNA2))
 head(meta)
 
@@ -166,44 +167,47 @@ sample_demo_table <- gridExtra::tableGrob(demo_table_total,
 grid::grid.newpage()
 grid::grid.draw(sample_demo_table)
 
-# save the plot 
+# to save the plot 
 # wrap the plot in grid_arrange for ggplot to open it easily. 
 # Create a grob object for saving
 sample_demo_table_plot2 <- gridExtra::arrangeGrob(sample_demo_table)
 
-# Save the table as PDF
-ggsave(
-  filename = "plots/sample_demo_table.pdf",
-  plot = sample_demo_table_plot2,
-  width = 10,
-  height = 6
-)
+## 3.2 create a saving for that would wrap everthing in ggsave -----
 
 
-# convert the above code into a function for ggsave to avoid more repeat of the code 
-
-save_plot_with_ggsave <- function(plot_obj,
-                                  filename,
-                                  width = 1,
-                                  height = 1,
-                                  units = "cm"
-                                  ) {
+save_plot_with_ggsave <- function(
+    plot_obj,
+    filename,
+    width,
+    height,
+    units = "in",
+    folder = "plots"
+) {
+  
+  # Create folder if needed
+  if (!dir.exists(folder)) {
+    dir.create(folder, recursive = TRUE)
+  }
+  
   ggsave(
-    filename = file.path("plots", filename),
+    filename = file.path(folder, filename),
     plot = plot_obj,
     width = width,
     height = height,
     units = units
   )
-  }
+  
+  message("Saved: ", file.path(folder, filename))
+}
 
-# call the save_plot_with_ggsave 
-save_plot_with_ggsave(plot_obj = sample_demo_table_plot2, 
-          filename = "sample_demo_table.pdf",
-          width = 10,
-          height = 6
-          )
-
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(
+  plot_obj = sample_demo_table_plot2,
+  filename = "sample_demo_table_plot2.pdf",
+  width = 12,
+  height = 8
+)
+## 3.3 gene count ----
 # extract the gene counts information 
 # generate gene count plot
 # Use the gene_count_per_sample table 
@@ -292,22 +296,13 @@ gene_count_plot <- ggplot(gene_count_clean,
 
 gene_count_plot
 
-# call the save_plot_with_ggsave function to save this plot 
-
-save_plot_with_ggsave(plot_obj = gene_count_plot,
-                      filename = "gene_count_plot.pdf",
-                      width = 35,
-                      height = 20,
-                      units = "cm")
-
-
-#ggsave(
-  #filename = "plots/gene_count_plot.pdf",
- # plot = gene_count_plot,
- # width = 35,
-  #height = 20,
- # units = "in"
-#)
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(
+  plot_obj = gene_count_plot,
+  filename = "gene_count_plot.pdf",
+  width = 12,
+  height = 8
+  )
 
 # arrange liliplot in ascending order 
 # extract the count matrixs 
@@ -418,27 +413,21 @@ df_detected_qc_metrics_plot <- ggplot(df_detected_qc_metrics,
 
 df_detected_qc_metrics_plot 
 
-#  call the ggsave function to save the plot 
 
-save_plot_with_ggsave(plot_obj = df_detected_qc_metrics_plot,
-                      filename = "df_detected_qc_metrics_plot.pdf",
-                      width = 30,
-                      height = 20,
-                      units = "cm")
-
-
-#ggsave(
- # filename = "plots/df_detected_qc_metrics_plot.pdf",
- # plot = df_detected_qc_metrics_plot,
- # width = 30,
-  #height = 20,
-  #units = "in"
-#)
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(
+  plot_obj = df_detected_qc_metrics_plot,
+  filename = "df_detected_qc_metrics_plot.pdf",
+  width = 12,
+  height = 8
+)
 
 
-####### Principle component analysis ###########################################
 
-# Normalisation 
+
+# 4 Principle component analysis ==============================================================================
+
+# Normalisation was already done 
 # extract TPM matrix
 tpms <- assay(mydata_bulk_RNA2, 'tpms')
 
@@ -467,6 +456,7 @@ metadata_df <- as.data.frame(colData(mydata_bulk_RNA2))
 
 pca_df <- merge(pca_df, metadata_df, by = "sampleName")  # metadata_df holds sample annotations
 
+
 # Plot PC1 vs PC2
 #round up the % values 
 percentVar <- round(100 * (pca_result$sdev^2 / sum(pca_result$sdev^2)), 1)
@@ -479,7 +469,7 @@ colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2","#
 pca_cell_population_plot <- ggplot(pca_df, 
                                aes(x = PC1, 
                                    y = PC2, 
-                                   colour = Cell.population )) +
+                                   colour = cell_types )) +
   geom_point(size = 3) +
   
   labs(
@@ -517,87 +507,68 @@ pca_cell_population_plot <- ggplot(pca_df,
   )
 pca_cell_population_plot
 
-# call the ggsave function again to save the plot 
-save_plot_with_ggsave(plot_obj = pca_cell_population_plot,
-                      filename = "pca_cell_population_plot.pdf",
-                      width = 30,
-                      height = 20,
-                      units = "cm")
 
-#ggsave(
-  #filename = "plots/pca_cell_population_plot.pdf",
-  #plot = pca_cell_population_plot,
-  #width = 30,
-  #height = 20,
-  #units = "in"
-#)
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(
+  plot_obj = pca_cell_population_plot,
+  filename = "pca_cell_population_plot.pdf",
+  width = 12,
+  height = 8
+)
 
 
 
-#scree plot 
-get_pca_variance_flags <- function(pca_obj,
-                                   prop_threshold = 5,       # per-PC: minimum % variance
-                                   cum_threshold = 80,       # cumulative: minimum % for retained PCs
-                                   max_N = NULL,             # optionally limit to first N PCs
-                                   percent = TRUE) {
+
+
+
+#scree plot which always be change base on the argument passed to the function 
+# create a function to do it flexibly 
+#get_pca_variance_flags <- function(pca_obj,
+                                   #prop_threshold = 5,       # per-PC: minimum % variance
+                                   #cum_threshold = 80,       # cumulative: minimum % for retained PCs
+                                   #max_N = NULL,             # optionally limit to first N PCs
+                                   #percent = TRUE) {
   # pca_obj: result of prcomp()
   # prop_threshold: minimum % variance explained by a PC to be flagged (numeric, e.g. 5 means 5%)
   # cum_threshold: cumulative % variance threshold for retention (numeric, e.g. 80)
   # max_N: if not NULL, only consider first max_N PCs
   # percent: whether to return % (default = TRUE) or fraction (FALSE)
   
-  sdev <- pca_obj$sdev                # extract the stored standard deviations (sdev) for each pc
-  vars  <- sdev^2                      # convert the sdev to variance by squaring the sdev ( variance = sd^2)
-  prop  <- vars / sum(vars)            # proportion of variance = (var of pc)/sum(variance)
-  if (percent) prop <- prop * 100      # convert to % 
-  cum   <- cumsum(prop)                 #n cal. cumulative variance 
+ # sdev <- pca_obj$sdev                # extract the stored standard deviations (sdev) for each pc
+  #vars  <- sdev^2                      # convert the sdev to variance by squaring the sdev ( variance = sd^2)
+  #prop  <- vars / sum(vars)            # proportion of variance = (var of pc)/sum(variance)
+  #if (percent) prop <- prop * 100      # convert to % 
+  #cum   <- cumsum(prop)                 #n cal. cumulative variance 
   
   # If max_N specified, subset
-  if (!is.null(max_N)) {
-    prop <- prop[1:max_N]
-    cum  <- cum[1:max_N]
-  }
+  #if (!is.null(max_N)) {
+  #  prop <- prop[1:max_N]
+   # cum  <- cum[1:max_N]
+ # }
   
   # create a summary table 
-  df <- data.frame(
-    PC                = seq_along(prop),
-    var_explained     = prop,
-    cumvar_explained  = cum,
-    flag_prop         = prop >= prop_threshold,
-    flag_cum          = cum <= cum_threshold
-  )
+  #df <- data.frame(
+   # PC                = seq_along(prop),
+    #var_explained     = prop,
+    #cumvar_explained  = cum,
+    #flag_prop         = prop >= prop_threshold,
+    #flag_cum          = cum <= cum_threshold
+ # )
   
   # another useful flag: keep PCs up to the first where cumulative variance exceeds the threshold
-  df$flag_cum_cutoff <- df$PC <= min(which(cum >= cum_threshold))
+  #df$flag_cum_cutoff <- df$PC <= min(which(cum >= cum_threshold))
   
-  return(df)
-}
-
-# extract the tpms 
-tpms <- assay(mydata_bulk_RNA2, 'tpms')
-
-# filter out zero values 
-tpms <- tpms[rowSums(tpms != 0) > 0, ]
-sum(is.nan(tpms))
-
-# many RNA-seq TPM = 0 
-# log2(0)  = neg. infinity, hence add a constant to offset the problem 
-# log-transform + constant value 
-mat <- log2(tpms + 0.55)  
-
-# transpose so samples are rows
-mat_t <- t(mat)
-
-# perform PCA
-pca_res <- prcomp(mat_t)
+  #return(df)
+#}
 
 
+# call the get_pca_variance_flags function 
+#var_table <- get_pca_variance_flags(pca_result,
+  #                                  prop_threshold = 6,
+  #                                  cum_threshold = 75,
+  #                                  max_N = NULL)
 
-# function call
-var_table <- get_pca_variance_flags(pca_res,
-                                    prop_threshold = 5,
-                                    cum_threshold = 75,
-                                    max_N = 20)
+#head(var_table)
 
 
 # var_explained: the variance explained by each PC (in percent if percent = TRUE)
@@ -610,10 +581,7 @@ var_table <- get_pca_variance_flags(pca_res,
 
 #flag_cum_cutoff: logical — TRUE for all PCs up to (and including) the first PC where cumulative variance ≥ cum_threshold. — this often gives a minimal set of PCs that achieves the desired cumulative variance.
 
-print(var_table)
-
-
-# generate a Scree plot 
+# generate a Scree plot with  fviz_eig function  
 
 elbow_point <- 6
 
@@ -633,7 +601,7 @@ eigen_plot <- fviz_eig(
   
   # horizontal threshold line
   geom_hline(
-    aes(yintercept = 5, linetype = "5% variance threshold"),
+    aes(yintercept = 6, linetype = "5% variance threshold"),
     color = "blue",
     size = 1
   ) +
@@ -649,7 +617,7 @@ eigen_plot <- fviz_eig(
     name = "Reference lines",
     values = c(
       "5% variance threshold" = "dashed",
-      "Elbow point (PC5)" = "dashed"
+      "Elbow point (PC6)" = "dashed"
     )
   ) +
   
@@ -681,27 +649,24 @@ eigen_plot <- fviz_eig(
 
 print(eigen_plot)
 
-
-# call the ggsave function  to save the scree plot 
-
-save_plot_with_ggsave(plot_obj = eigen_plot,
-                      filename = "eigen_plot.pdf",
-                      width = 25,
-                      height = 30,
-                      units = "cm")
-
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(
+  plot_obj = eigen_plot,
+  filename = "eigen_plot.pdf",
+  width = 12,
+  height = 8
+)
 
 
 
-
-######### Differential gene expression analysis ################################ 
+# 5 Differential gene expression analysis ==================================================================================================================================================================
 # pairwise analysis was performed 1 vs 1
 # change coldata column name 
 names(colData(mydata_bulk_RNA2))
 names(rowData(mydata_bulk_RNA2))
 
 
-# design sumerisedEperiment object  (dds)
+# 5.1 design sumerisedEperiment object  (dds) ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Rename the 'Cell.population' column to 'cell_types'
 colnames(colData(mydata_bulk_RNA2))[colnames(colData(mydata_bulk_RNA2)) == "Cell.population"] <- "cell_types"
@@ -712,12 +677,9 @@ mydata_bulk_RNA2$cell_types <- factor(mydata_bulk_RNA2$cell_types)
 #extract celltypes 
 levels(colData(mydata_bulk_RNA2)$cell_types)
 
-#build DESeqDataSet
+#build DESeqDataSet object 
 dds_pairwise <- DESeqDataSet(mydata_bulk_RNA2, 
                              design = ~ Patient + cell_types)
-
-
-
 # drop PBMCs 
 # Filter so only A and B remain
 dds_pairwise <- dds_pairwise[, colData(dds_pairwise)$cell_types != "PBMC"]
@@ -775,12 +737,16 @@ rowData(dds_obj)$hgnc_symbol <- symbol_lookup[ensembl_ids_clean[matched_genes]]
 rowData(dds_obj)$gene_biotype <- biotype_lookup[ensembl_ids_clean[matched_genes]]
 rowData(dds_obj)
 
-##run DESeq 
+# 5.2  run DESeq ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 dds_pairwise <- DESeq(dds_obj)
 
 #check comparisons (coeffeicients)
 resultsNames(dds_pairwise)
 
+
+
+
+# 5.2 Deseq results retrieval ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #retrieve the specific levels results
 
@@ -794,53 +760,13 @@ res_B_cDC1 <- results(dds_pairwise, contrast = c("cell_types", "B", "cDC1"))
 res_B_cDC1$symbol <- rowData(dds_pairwise)[ rownames(res_B_cDC1), "symbol" ]
 res_B_cDC1$genes <- rownames(res_B_cDC1)
 
-
-
-#Now convert to df 
+# Now convert to df 
 res_B_cDC1_df <- as.data.frame(res_B_cDC1)
 #remove NAs
 res_B_cDC1_df <- res_B_cDC1_df[!is.na(res_B_cDC1_df$padj), ]
 
-res_B_cDC1_df
-
-# convert the above code into a function 
-
-get_DESeq2_results_df <- function(
-    dds_obj,
-    contrast,
-    symbol_column = "symbol"
-) {
-  
-  # Run DESeq2 contrast
-  res <- results(dds_obj,
-                 contrast = contrast
-                 )
-  
-  # Add gene symbols from rowData
-  res$symbol <- rowData(dds_obj)[
-    rownames(res),
-    symbol_column
-  ]
-  
-  # Add gene IDs
-  res$genes <- rownames(res)
-  
-  # Convert to dataframe
-  res_df <- as.data.frame(res)
-  
-  # Remove genes with missing adjusted p-values
-  res_df <- res_df[!is.na(res_df$padj), ]
-  
-  return(res_df)
-}
-
-# call the get_DEseq2_results_df function 
-res_B_cDC1_df <- get_DESeq2_results_df(
-  dds_obj = dds_pairwise,
-  contrast = c("cell_types", "B", "cDC1")
-)
-
 head(res_B_cDC1_df)
+
 
 # create a ggMAplot for B cells against cDC1 cells 
 
@@ -885,14 +811,141 @@ b_cdc1_ma_plot <- ggplot(res_B_cDC1_df, aes(x = log10(baseMean), y = log2FoldCha
     legend.background    = element_rect(fill = "white", color = "gray80")
   )
 b_cdc1_ma_plot 
-save_plot_with_ggsave(plot_obj = b_cdc1_ma_plot,
-                      filename = "b_cdc1_ma_plot.pdf",
-                      width = 30,
-                      height = 20)
 
 
+## volcano plot 
+# prepare the data for a volcano plot 
+# colour the direction of DGE 
 
-# convert the above code into a function, so it is easier to generate MA plot for other comparsions 
+res_B_cDC1_noNA_df <- res_B_cDC1_df %>% 
+  
+  # create new columns named as direction and Col
+  mutate(
+    direction = case_when(
+      
+      # significant with positive fold change above threshold
+      padj <= 0.05 & log2FoldChange >  1.5 ~ "high",
+      
+      # significant with negative fold change below threshold
+      padj <= 0.05 & log2FoldChange < -1.5 ~ "low",
+      
+      # everything else is not significant
+      TRUE ~ "NotSig"
+    ))
+
+
+top25cDC1_B <- res_B_cDC1_noNA_df%>%
+  filter(padj < 0.01) %>%                                     # first, keep only significant genes
+  arrange(desc(abs(log2FoldChange)), padj) %>%                # then sort
+  head(25) %>%                                                 # then take the top 25
+  pull(symbol)                                                # get only the symbol
+
+
+# create plotting groups 
+res_B_cDC1_noNA_df <- res_B_cDC1_noNA_df %>%
+  mutate(
+    plot_group = case_when(
+      symbol %in% top25cDC1_B ~ "Top DEG",
+      direction == "high" ~ "high",
+      direction == "low" ~ "low",
+      TRUE ~ "NotSig"
+    )
+  )
+
+# generate the volcano plot 
+
+b_cdc1_volcano_plot <- ggplot(res_B_cDC1_noNA_df, aes(log2FoldChange, -log10(padj))) +
+  
+  geom_point(aes(color = plot_group), alpha = 0.75, size = 3.5) +
+  
+  scale_color_manual(values = c(high = "red",
+                                low = "blue",
+                                NotSig = "gray",
+                                "Top DEG" = "darkgreen"
+  )) +
+  
+  # add thresholds
+  geom_vline(xintercept = c(-1.5, 1.5), linetype = "dashed", linewidth = 0.6) +
+  geom_hline(yintercept = -log10(0.05), linetype = "dashed", linewidth = 0.6) +
+  
+  #add top gene labels 
+  geom_text_repel(data = subset(res_B_cDC1_noNA_df, 
+                                symbol %in% top25cDC1_B),
+                  aes(label = symbol),
+                  size = 7,
+                  max.overlaps = Inf,
+                  box.padding = 0.4,
+                  point.padding = 0.3
+  ) +
+  # add titles 
+  labs(title = "Volcano Plot: cDC1 vs B cells Differential Expression",
+       x = "log2 Fold Change",
+       y = "-log10 Adjusted P-value",
+       color = "Expression levels"
+  ) +
+  #add theme 
+  theme_classic(base_size = 14) +
+  
+  theme(plot.title = element_text(size = 25,
+                                  face = "bold",
+                                  hjust = 0.5
+  ),
+  #axis titles
+  axis.title.x = element_text(size = 20,
+                              face = "bold"),
+  axis.title.y = element_text(size = 20, 
+                              face = "bold"),
+  
+  # Axis tick labels
+  axis.text.x = element_text(size = 15),
+  axis.text.y = element_text(size = 15),
+  
+  # Legend
+  legend.title = element_text(size = 18, face = "bold"),
+  legend.text = element_text(size = 15),
+  
+  # Legend position
+  legend.position = "right"
+  )
+
+b_cdc1_volcano_plot
+
+
+# 5.2.1 DESeq exploratory analysis (EA) functions for similar analyses ----------------------------------------------------------------------------------------------------------------------------------------------------------
+# convert codes from 5.2 into a functions 
+
+# This function get result Deseq result object for each specific comparison 
+get_DESeq2_results_df <- function(
+    dds_obj,
+    contrast,
+    symbol_column = "symbol"
+    ) {
+  
+  # Run DESeq2 contrast
+  res <- results(dds_obj,
+                 contrast = contrast
+                 )
+  
+  # Add gene symbols from rowData
+  res$symbol <- rowData(dds_obj)[
+    rownames(res),
+    symbol_column
+  ]
+  
+  # Add gene IDs
+  res$genes <- rownames(res)
+  
+  # Convert to dataframe
+  res_df <- as.data.frame(res)
+  
+  # Remove genes with missing adjusted p-values
+  res_df <- res_df[!is.na(res_df$padj), ]
+  
+  return(res_df)
+}
+
+
+#  This function generate a MA plot
 
 plot_MA_DESeq2_fun <- function(res_df,
                            title = "MA Plot",
@@ -982,123 +1035,253 @@ plot_MA_DESeq2_fun <- function(res_df,
 }
 
 
+# This too prepares the volcano plot data 
 
-# save the MA plot as a sample 
-ggsave(
-  filename = "plots/b_cdc1_ma_plot.pdf",
-  plot = b_cdc1_ma_plot,
-  width = 15,
-  height = 10,
-  units = "in"
-)
-
-
-## volcano plot 
-# prepare the data for a volcano plot 
-# colour the direction of DGE 
-
-res_B_cDC1_noNA_df <- res_B_cDC1_df %>% 
+prepare_volcano_data_fun <- function(res_df, 
+                                 padj_cutoff = 0.05,
+                                 lfc_cutoff = 1.5,
+                                 top_n = 25,
+                                 top_padj_cutoff = 0.01,
+                                 gene_column = "symbol"
+                                 ) {
   
-  # create new columns named as direction and Col
-  mutate(
-    direction = case_when(
-      
-      # significant with positive fold change above threshold
-      padj <= 0.05 & log2FoldChange >  1.5 ~ "high",
-      
-      # significant with negative fold change below threshold
-      padj <= 0.05 & log2FoldChange < -1.5 ~ "low",
-      
-      # everything else is not significant
-      TRUE ~ "NotSig"
-    ))
-
-
-top25cDC1_B <- res_B_cDC1_noNA_df%>%
-  filter(padj < 0.01) %>%                                     # first, keep only significant genes
-  arrange(desc(abs(log2FoldChange)), padj) %>%                # then sort
-  head(25) %>%                                                 # then take the top 25
-  pull(symbol)                                                # get only the symbol
-
-
-# create plotting groups 
-res_B_cDC1_noNA_df <- res_B_cDC1_noNA_df %>%
-  mutate(
-    plot_group = case_when(
-      symbol %in% top25cDC1_B ~ "Top DEG",
-      direction == "high" ~ "high",
-      direction == "low" ~ "low",
-      TRUE ~ "NotSig"
+  # Add DEG direction
+  res_volcano_df <- res_df %>%
+    mutate(
+      direction = case_when(
+        
+        padj <= padj_cutoff & log2FoldChange > lfc_cutoff ~ "high",
+        
+        padj <= padj_cutoff & log2FoldChange < -lfc_cutoff ~ "low",
+        
+        TRUE ~ "NotSig"
+      )
     )
-  )
+  
+  
+  # Select top significant DEGs based on absolute fold change
+  top_DEGs <- res_volcano_df %>%
+    filter(padj < top_padj_cutoff) %>%
+    arrange(desc(abs(log2FoldChange)), padj) %>%
+    head(top_n) %>%
+    pull(all_of(gene_column))
+  
+  
+  # Create final plotting groups
+  res_volcano_df <- res_volcano_df %>%
+    mutate(
+      plot_group = case_when(
+        .data[[gene_column]] %in% top_DEGs ~ "Top DEG",
+        direction == "high" ~ "high",
+        direction == "low" ~ "low",
+        TRUE ~ "NotSig"
+      )
+    )
+  
+  
+  return(res_volcano_df)
+}
 
 
-b_cdc1_volcano_plot <- ggplot(res_B_cDC1_noNA_df, aes(log2FoldChange, -log10(padj))) +
+# This functions plots volcano plot 
+
+plot_volcano_DESeq2 <- function(
+    volcano_df,
+    title = "Volcano Plot: Differential Expression",
+    lfc_cutoff = 1.5,
+    padj_cutoff = 0.05,
+    gene_column = "symbol"
+    ) {
   
-  geom_point(aes(color = plot_group), alpha = 0.75, size = 3.5) +
-  
-  scale_color_manual(values = c(high = "red",
-                                low = "blue",
-                                NotSig = "gray",
-                                "Top DEG" = "darkgreen"
-  )) +
-  
-  # add thresholds
-  geom_vline(xintercept = c(-1.5, 1.5), linetype = "dashed", linewidth = 0.6) +
-  geom_hline(yintercept = -log10(0.05), linetype = "dashed", linewidth = 0.6) +
-  
-  #add top gene labels 
-  geom_text_repel(data = subset(res_B_cDC1_noNA_df, 
-                                symbol %in% top25cDC1_B),
-                  aes(label = symbol),
-                  size = 7,
-                  max.overlaps = Inf,
-                  box.padding = 0.4,
-                  point.padding = 0.3
-  ) +
-  # add titles 
-  labs(title = "Volcano Plot: cDC1 vs B cells Differential Expression",
-       x = "log2 Fold Change",
-       y = "-log10 Adjusted P-value",
-       color = "Expression levels"
-  ) +
-  #add theme 
-  theme_classic(base_size = 14) +
-  
-  theme(plot.title = element_text(size = 25,
-                                  face = "bold",
-                                  hjust = 0.5
-  ),
-  #axis titles
-  axis.title.x = element_text(size = 20,
-                              face = "bold"),
-  axis.title.y = element_text(size = 20, 
-                              face = "bold"),
-  
-  # Axis tick labels
-  axis.text.x = element_text(size = 15),
-  axis.text.y = element_text(size = 15),
-  
-  # Legend
-  legend.title = element_text(size = 18, face = "bold"),
-  legend.text = element_text(size = 15),
-  
-  # Legend position
-  legend.position = "right"
-  )
+  ggplot(volcano_df,
+         aes(x = log2FoldChange,
+             y = -log10(padj)
+             )
+         ) +
+    
+    geom_point(aes(color = plot_group),
+               alpha = 0.75,
+               size = 3.5
+               ) +
+    
+    scale_color_manual(
+      values = c(high = "red",
+                 low = "blue",
+                 NotSig = "gray",
+                 "Top DEG" = "darkgreen"
+                 )
+      ) +
+    
+    # Add fold-change thresholds
+    geom_vline(xintercept = c(-lfc_cutoff, lfc_cutoff),
+               linetype = "dashed",
+               linewidth = 0.6
+               ) +
+    
+    # Add significance threshold
+    geom_hline(yintercept = -log10(padj_cutoff),
+               linetype = "dashed",
+               linewidth = 0.6
+               ) +
+    
+    # Label top DEGs
+    geom_text_repel(
+      data = subset(volcano_df, plot_group == "Top DEG"),
+      aes(label = .data[[gene_column]]),
+      size = 7,
+      max.overlaps = Inf,
+      box.padding = 0.4,
+      point.padding = 0.3
+    ) +
+    
+    labs(
+      title = title,
+      x = "log2 Fold Change",
+      y = "-log10 Adjusted P-value",
+      color = "Expression levels"
+    ) +
+    
+    theme_classic(base_size = 14) +
+    
+    theme(
+      plot.title = element_text(
+        size = 25,
+        face = "bold",
+        hjust = 0.5
+      ),
+      
+      axis.title.x = element_text(
+        size = 20,
+        face = "bold"
+      ),
+      
+      axis.title.y = element_text(
+        size = 20,
+        face = "bold"
+      ),
+      
+      axis.text.x = element_text(
+        size = 15
+      ),
+      
+      axis.text.y = element_text(
+        size = 15
+      ),
+      
+      legend.title = element_text(
+        size = 18,
+        face = "bold"
+      ),
+      
+      legend.text = element_text(
+        size = 15
+      ),
+      
+      legend.position = "right"
+    )
+}
 
 
-# save the volcano plot as a sample 
-ggsave(
-  filename = "plots/b_cdc1_volcano_plot.pdf",
-  plot = b_cdc1_volcano_plot,
-  width = 15,
-  height = 10,
-  units = "in"
-)
+
+# 5.2.2  call the DESeq functions in 5.2.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# Deseq comparison result retrieval function call 
+
+res_B_cDC1_df <- get_DESeq2_results_df(dds_obj = dds_pairwise,
+                                       contrast = c("cell_types", "B", "cDC1")
+                                       )
+head(res_B_cDC1_df)
 
 
-# create functions for repeated codes ###################################
+# call the plot_MA_DESeq2_fun
+b_cdc1_ma_plot <- plot_MA_DESeq2_fun(res_df = res_B_cDC1_df,
+                                     title = "MA Plot (B vs cDC1)"
+                                     )
+
+b_cdc1_ma_plot
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(plot_obj = b_cdc1_ma_plot,
+                      filename = "b_cdc1_ma_plot.pdf",
+                      width = 20,
+                      height = 20
+                      )
+
+
+# call the prepare_volcano_data_fun
+res_B_cDC1_volcano_df <- prepare_volcano_data_fun(res_df = res_B_cDC1_df,
+                                                  gene_column = "symbol"
+                                                  )
+head(res_B_cDC1_volcano_df)
+
+
+# call the volcano plot generation function 
+b_cdc1_volcano_plot <- plot_volcano_DESeq2(volcano_df = res_B_cDC1_volcano_df,
+                                           title = "Volcano Plot: B vs cDC1 Differential Expression"
+                                           )
+
+b_cdc1_volcano_plot
+# call the save_plot_with_ggsave function 
+save_plot_with_ggsave(plot_obj = b_cdc1_volcano_plot,
+                      filename = "b_cdc1_volcano_plot.pdf",
+                      width = 20,
+                      height = 20
+                      )
+
+
+
+# DESeq2 EA function calls 
+
+#var_table <- get_pca_variance_flags(pca_result,
+                                    #prop_threshold = 5,
+                                   #cum_threshold = 75,
+                                   # max_N = 20)
+#var_table
+
+
+
+
+
+# 5.3 Downstream analysis functions ---- 
+
+
+#scree plot 
+#get_pca_variance_flags <- function(pca_obj,
+                                  # prop_threshold = 5,       # per-PC: minimum % variance
+                                  # cum_threshold = 80,       # cumulative: minimum % for retained PCs
+                                   #max_N = NULL,             # optionally limit to first N PCs
+                                   #percent = TRUE) {
+  # pca_obj: result of prcomp()
+  # prop_threshold: minimum % variance explained by a PC to be flagged (numeric, e.g. 5 means 5%)
+  # cum_threshold: cumulative % variance threshold for retention (numeric, e.g. 80)
+  # max_N: if not NULL, only consider first max_N PCs
+  # percent: whether to return % (default = TRUE) or fraction (FALSE)
+  
+  #sdev <- pca_obj$sdev                # extract the stored standard deviations (sdev) for each pc
+  #vars  <- sdev^2                      # convert the sdev to variance by squaring the sdev ( variance = sd^2)
+  #prop  <- vars / sum(vars)            # proportion of variance = (var of pc)/sum(variance)
+  #if (percent) prop <- prop * 100      # convert to % 
+  #cum   <- cumsum(prop)                 #n cal. cumulative variance 
+  
+  # If max_N specified, subset
+  #if (!is.null(max_N)) {
+   # prop <- prop[1:max_N]
+   # cum  <- cum[1:max_N]
+  #}
+  
+  # create a summary table 
+  #df <- data.frame(
+  #  PC                = seq_along(prop),
+   # var_explained     = prop,
+   # cumvar_explained  = cum,
+   # flag_prop         = prop >= prop_threshold,
+   # flag_cum          = cum <= cum_threshold
+ # )
+  
+  # another useful flag: keep PCs up to the first where cumulative variance exceeds the threshold
+  #df$flag_cum_cutoff <- df$PC <= min(which(cum >= cum_threshold))
+  
+ # return(df)
+#}
+
 
 # This function would extraact pair wise analyses 
 
@@ -1430,37 +1613,12 @@ generate_heatmap <- function(heatmap_data,
 
 
 
-save_heatmap <- function(
-    plot_object,
-    file_path = ".",
-    filename = "heatmap_plot",
-    width = 10,
-    height = 6,
-    dpi = 300
-) {
-  # combine file path and filename
-  full_path <- file.path(file_path, filename)
-  
-  # add .pdf extension if not already present
-  if (!grepl("\\.pdf$", full_path, ignore.case = TRUE)) {
-    full_path <- paste0(full_path, ".pdf")
-  }
-  
-  # save as PDF
-  grDevices::pdf(full_path, width = width, height = height)
-  print(plot_object)
-  dev.off()
-  
-  message("Heatmap saved as: ", full_path)
-  return(invisible(plot_object)) # return but don't display in the console 
-}
 
 
 
+# 5.3.1 call the downstream analysis functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-######functions call ##################################################
-# pairwise call
-
+# call the pairwise function (get_pairwise_DEGs) and wrangle the data 
 pairwise_output <- get_pairwise_DEGs(
   dds_object = dds_pairwise,
   cell_type_col = "cell_types",
@@ -1484,8 +1642,6 @@ summary_tbl <- summary_tbl %>%
     `Up-regulated in Cell2` = n_higher_in_cell2,
     `Total DEGs` = total_DEGs
   )
-
-
 
 #  create compact table with three gradient colors and bold Comparison column
 # create compact publication-style table with three gradient colors
@@ -1561,16 +1717,12 @@ gt_tbl_pub
 # display the table
 gt_tbl_pub
 
-
-
-#save the table of differential expressions
-
 gtsave(
   gt_tbl_pub,
   "plots/table_up_down_regulated_genes.png"
 )
 
-##### functions calls to identify up-regulated genes per cell ###########################################################
+# call get_higher_in_cell function for up-regulated genes per cell 
 
 ## call get_higher_in_cell function 
 # get all genes higher in each cell type across all comparisons
@@ -1595,7 +1747,7 @@ B_up_df %>%
   summarise(n_comparisons = n_distinct(comparison)) %>%
   arrange(desc(n_comparisons))
 
-###################f unction calls to find the top gene significant genes  per cell ################################ 
+# function calls to find the top gene significant genes  per cell 
 
 top25_B_genes <- top_genes_fn(df_hd_data = B_up_df , top_n = 25, min_comparisons = 8) 
 top25_cDC1_genes <- top_genes_fn(df_hd_data = cDC1_up_df , top_n = 25, min_comparisons = 8) 
@@ -1621,10 +1773,97 @@ top25_mo2_genes$symbol
 top25_moint_genes$symbol
 
 
+
+
+#library(dplyr)
+#library(tibble)
+
+#library(dplyr)
+#library(tibble)
+
+cell_gene_table <- bind_rows(
+  tibble(Cell = "B",       Gene = top25_B_genes$symbol),
+  tibble(Cell = "cDC1",    Gene = top25_cDC1_genes$symbol),
+  tibble(Cell = "cDC2",    Gene = top25_cDC2_genes$symbol),
+  tibble(Cell = "DC3",     Gene = top25_DC3_genes$symbol),
+  tibble(Cell = "pDC",     Gene = top25_pDC_genes$symbol),
+  tibble(Cell = "tDC",     Gene = top25_tDC_genes$symbol),
+  tibble(Cell = "mo1",     Gene = top25_mo1_genes$symbol),
+  tibble(Cell = "mo2",     Gene = top25_mo2_genes$symbol),
+  tibble(Cell = "moint",   Gene = top25_moint_genes$symbol)
+)
+
+# pivot wide the data; 
+cell_gene_horizontal <- cell_gene_table %>%
+  group_by(Cell) %>%
+  summarise(
+    Genes = paste(Gene, collapse = ", "),
+    .groups = "drop"
+  )
+
+cell_gene_horizontal
+
+
+#format and customise the table 
+
+#library(gt)
+#library(dplyr)
+marker_gene_gt <- cell_gene_horizontal %>%
+  gt() %>%
+  
+  # title of the table 
+  tab_header(
+    title = "Top 25 Marker Genes Identified for Each Cell Type"
+  ) %>%
+  
+  # Rename columns
+  cols_label(Cell = "Cell Type",
+             Genes = "Top 25 Marker Genes"
+             ) %>%
+  
+  # align columns
+  cols_align(align = "left",
+             columns = everything()
+             ) %>%
+  
+  # bold cell type names
+  tab_style(style = cell_text(weight = "bold"),
+            locations = cells_body(columns = Cell)
+            ) %>%
+  
+  # Header styling
+  tab_style(style = list(cell_fill(color = "grey90"),
+                         cell_text(weight = "bold")
+                         ),
+    locations = cells_column_labels()
+    ) %>%
+  
+  # Table options
+  tab_options(
+    table.font.size = px(12),
+    data_row.padding = px(6),
+    table.border.top.color = "black",
+    table.border.bottom.color = "black",
+    table_body.hlines.color = "grey80"
+  ) %>%
+  
+  # Alternate row shading
+  opt_row_striping()
+
+marker_gene_gt
+
+
+gtsave(
+  marker_gene_gt,
+  filename = "plots/top25_marker_genes_table.pdf"
+)
+
+
 #find common between cell types 
 intersect(top25_moint_genes$symbol, top25_mo2_genes$symbol)
 
-#create a list of  all cell types 
+#create a list of  all cell types  and generate top 3 genes of each cell
+#then make a visual table 
 
 cell_dfs <- list(
   "cDC1" = top25_cDC1_genes,
@@ -1669,40 +1908,90 @@ formatted_top3 <- top3_stats_summary %>%
 print(formatted_top3)
 
 
-# create the kable table
+# Create a customised gt table
 top3_DEGs_per_celltype <- formatted_top3 %>%
-  kbl(
-    caption = "Top 3 Differentially Expressed Genes Across Myeloid and Lymphoid Subsets",
-    align = "cccc",
-    booktabs = TRUE
+  gt() %>%
+  
+  # table title
+  tab_header(
+    title = "Top 3 Differentially Expressed Genes Across Myeloid and Lymphoid Subsets"
   ) %>%
-  kable_styling(
-    bootstrap_options = c("striped", "hover", "condensed", "responsive"),
-    full_width = FALSE,
-    position = "center",
-    font_size = 12
+  
+  # Column alignment
+  cols_align(
+    align = "left",
+    columns = everything()
   ) %>%
-  column_spec(1, bold = TRUE, border_right = TRUE) %>%
-  column_spec(2, italic = TRUE, color = "black") %>%
-  row_spec(0, bold = TRUE, color = "white", background = "#4E79A7") %>%
-  pack_rows("Dendritic Cells", 1, 9) %>%
-  pack_rows("Lymphoid Cells", 10, 12) %>%
-  pack_rows("Monocyte Subsets", 13, 21)
+  
+  # Bold first column (cell type)
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body(
+      columns = 1
+    )
+  ) %>%
+  
+  # Italicize gene names (second column)
+  tab_style(
+    style = cell_text(style = "italic"),
+    locations = cells_body(
+      columns = 2
+    )
+  ) %>%
+  
+  # Header style
+  tab_style(
+    style = list(
+      cell_fill(color = "#4E79A7"),
+      cell_text(
+        weight = "bold",
+        color = "white"
+      )
+    ),
+    locations = cells_column_labels()
+  ) %>%
+  
+  # Add biological row groups
+  tab_row_group(
+    label = "Dendritic Cells",
+    rows = 1:9
+  ) %>%
+  
+  tab_row_group(
+    label = "Lymphoid Cells",
+    rows = 10:12
+  ) %>%
+  
+  tab_row_group(
+    label = "Monocyte Subsets",
+    rows = 13:21
+  ) %>%
+  
+  # Table formatting options
+  tab_options(
+    table.font.size = px(15),
+    data_row.padding = px(5),
+    table.width = pct(90),
+    table.border.top.color = "black",
+    table.border.bottom.color = "black",
+    table_body.hlines.color = "grey80",
+    heading.title.font.size = px(16),
+    heading.title.font.weight = "bold"
+  ) %>%
+  
+  # alternate row shading
+  opt_row_striping()
 
+
+# display table
 top3_DEGs_per_celltype
 
-
-#save_kable(
- # top3_DEGs_per_celltype,
-  #"plots/top3_DEGs_per_celltype.png",
- # zoom = 2,
-  #vwidth = 1500,
- # vheight = 2500
-#)
+gtsave(
+  top3_DEGs_per_celltype,
+  filename = "plots/top3_DEGs_per_celltype.html",)
 
 
-
-### Heatmap data preparation ###################################################################################
+# 5.5 Heat map visualisation ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 # extract the top 3 genes from each df  to create heatmap 
 # create a list of dfs 
 dfs <- list(top25_B_genes,
@@ -1715,21 +2004,17 @@ dfs <- list(top25_B_genes,
             top25_tDC_genes)
 
 
-# Again pick the top 3 genes from each cell type and make global heatmap generation 
+# again pick the top 3 genes from each cell type and make global heatmap generation 
 top3_combine_genes <- imap_dfr(dfs, ~ { .x %>%
     slice_head(n = 3) %>%        # take first 3 rows
-    mutate(source = .y)          # remember which df it was from
-}
-)
+    mutate(source = .y)
+  })                         # remember which df it was from
 
 top3_combine_genes
 
 #  pick on unique gene_id to avvoid duplicates check for duplicated gene 
 top3_unique <- top3_combine_genes %>%
   distinct(gene_id, .keep_all = TRUE)
-
-
-
 
 # calls the creat_heatmap_data function to prepare heatmap datasets 
 
@@ -1791,8 +2076,6 @@ heatmap_data_moint <- create_heatmap_data(dds_pairwise = dds_pairwise,
                                           top_genes_df = top25_moint_genes, 
                                           metadata_cols = "cell_types", 
                                           use_vst = TRUE)
-
-
 
 
 # heatmaps  of the different cell types plus a combine cell type top 3 genes 
@@ -1886,22 +2169,50 @@ moint_heatmap
 
 
 
-
-
-pdf(
-  file = "plots/top25_combine_markers_heatmap.pdf",
-  width = 10,
-  height = 6
+heatmap_list <- list(
+  global_heatmap = heatmap_plot,
+  Bcell = b_cell_heatmap,
+  cDC1 = cDC1_heatmap,
+  cDC2 = cDC2_heatmap,
+  DC3 = DC3_heatmap,
+  pDC = pDC_heatmap,
+  tDC = tDC_heatmap,
+  mo1  = mo1_heatmap,
+  mo2  = mo2_heatmap,
+  moint = moint_heatmap
 )
 
-ComplexHeatmap::draw(heatmap_plot)
+library(ComplexHeatmap)
+save_complex_heatmap <- function(heatmap_obj,
+                                 filename,
+                                 width = 8,
+                                 height = 6) {
+  
+  pdf(
+    filename,
+    width = width,
+    height = height
+  )
+  
+  ComplexHeatmap::draw(heatmap_obj)
+  
+  dev.off()
+}
 
-dev.off()
+for (i in names(heatmap_list)) {
+  
+  save_complex_heatmap(heatmap_obj = heatmap_list[[i]],
+    filename = paste0("plots/", i, "_heatmap.pdf"),
+    width = 8,
+    height = 6
+  )
+}
 
 
 
 
-############# Single cell Analysis ####################################################################
+
+# Single cell Analysis ###############################################################################################################################################################################################################
 
 # remeber to to load these libraries: 
 # library(Seurat), library(presto)
