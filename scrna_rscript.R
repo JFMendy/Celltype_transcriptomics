@@ -12,7 +12,7 @@
 
 
 ## read in the scRNA-seq  data
-single_cell_data <-readRDS("raw_data/scRNASeq/seu.rds")
+single_cell_data <-readRDS("data/scRNASeq/seu.rds")
 
 
 # 1 preprocess the data -------
