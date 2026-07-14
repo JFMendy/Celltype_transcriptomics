@@ -28,16 +28,14 @@ dim(single_cell_data)
 head(rownames(single_cell_data), 10)       # check 10 row  names 
 
 
-# 3 data cleaning ----
+# 3 Quality control and cleaning ----
 # clean the data by removing: dying cells -> exhibit high mitochondrial contamination 
 # by removing genes starting with MT -> mitochondrial genes 
 # store mitochondrial percentage in object meta data in "percent.mt" column 
 
 single_cell_data2[["percent.mt"]] <- PercentageFeatureSet(single_cell_data2, pattern = "^MT-")
 
-
-
-# 4 prepossessing visualization ---- 
+## 3.1 Pre cleaning visualization ---- 
 # Visualize QC Metrics  using the Violin plots
 VlnPlot(single_cell_data2, features = c("nFeature_RNA", 
                                         "nCount_RNA",
@@ -68,8 +66,7 @@ max_genes <- 6000       # adjust depending on dataset
 max_mt    <- 20         # or lower if appropriate
 min_counts <- 500       # optional lower bound
 
-
-
+# cleaning the data 
 single_cell_data2<- subset(single_cell_data2,
                            subset = nFeature_RNA > min_genes &
                              nFeature_RNA < max_genes &
@@ -79,7 +76,7 @@ single_cell_data2<- subset(single_cell_data2,
 
 
 
-# 5 Visualisation  after cleaning ----
+## 3.2 Post cleaning Visualisation  ----
 #filtering verification after preprocessing 
 #post filtering violin plot 
 VlnPlot(single_cell_data2, features = c("nFeature_RNA",
@@ -92,7 +89,7 @@ FeatureScatter(single_cell_data2,
                "percent.mt") 
 
 
-# 6 normalization ----
+# 4 normalization ----
 
 # Normalisation was already done, no need for this step
 #perform normalisation 
@@ -100,43 +97,31 @@ FeatureScatter(single_cell_data2,
 #                                  normalization.method = "LogNormalize", 
 #                                scale.factor = 10000)
 
-
-
-
 #number for genes
 nrow(single_cell_data2) # number of genes
 ncol(single_cell_data2)  # number of cells 
 single_cell_data2
 
-
-
-# 7  Gene variability calculation -----
-#calculate the high cell to cell variation 
-#In most scRNA-seq experiments only a small proportion of the genes will be informative and biologically variable
+# 5 Gene variability calculation -----
+# calculate the high cell to cell variation 
+# In most scRNA-seq experiments only a small proportion of the genes will be informative and biologically variable
 # by default 2000 features would be returned
 single_cell_data2 <- FindVariableFeatures(single_cell_data2, 
                                           selection.method = 'vst', 
                                           nfeatures = 2000)
-
-
 
 # 8 Scaling 
 # next scale the data: Scaling the data will keep highly expressed genes from dominating our analysis -> mean  to 0: variance -> 1 
 # scaling can also be used to remove unwanted variations(e.g., cell cycle or percent mitochondrial) 
 # Note scaling has also been done. Not required for this analysis 
 
-
-
-#  9  Top Variable Gene visualisation ----
+## 5.1 Top Variable Gene visualisation ----
 # Identify most highly variable genes
 # identify top 10 variable features first
 top10 <- head(VariableFeatures(single_cell_data2), 10)
 top10
 
-
-# 10  Visualisation of top variable genes ----
-
-
+## 5.2 Top variability visualisation  ----
 
 scrna_save_plot_with_ggsave <- function(
     plot_obj,
@@ -162,8 +147,6 @@ scrna_save_plot_with_ggsave <- function(
   
   message("Saved: ", file.path(folder, filename))
 }
-
-
 
 # basic VariableFeaturePlot
 plot1 <- VariableFeaturePlot(single_cell_data2, pt.size = 4)
@@ -191,9 +174,7 @@ scrna_top_var_genes <- plot2 +
     axis.title.y = element_text(size = 16, face = "bold")
   )
 
-
 scrna_top_var_genes
-
 
 # call the save_plot_with_ggsave function 
 scrna_save_plot_with_ggsave(
@@ -203,10 +184,7 @@ scrna_save_plot_with_ggsave(
   height = 8
 )
 
-
-
-
-# 11 PCA Analysis ----
+# 6 PCA Analysis ----
 
 #performing a reduction analysis (PCA)
 single_cell_data2 <- RunPCA(single_cell_data2, 
@@ -218,14 +196,11 @@ single_cell_data2 <- RunPCA(single_cell_data2,
 # Extract PCA standard deviations manually
 pca_stdev <- Stdev(object = single_cell_data2, reduction = "pca")
 
-
-
 # Create custom elbow plot with BIGGER DOTS - BOLD AXES
 scrna_elbow_plot <- ggplot(data.frame(PC = 1:length(pca_stdev), 
                                       Stdev = pca_stdev), 
                            aes(x = PC, 
                                y = Stdev)) +
-  
   geom_point(size = 4, 
              alpha = 0.8, 
              color = "steelblue") +
@@ -276,12 +251,11 @@ scrna_save_plot_with_ggsave(
   height = 8
 )
 
-# 12 clustering ----
+# 7 clustering ----
 
-#perform clustering 
+# perform clustering 
 # Decide “n_pcs” based on elbow, variance, dataset size
 # Find neighbors
-
 n_pcs <- 25
 single_cell_data2<- FindNeighbors(single_cell_data2, dims = n_pcs)
 
@@ -293,21 +267,16 @@ single_cell_data2<- FindNeighbors(single_cell_data2, dims = n_pcs)
 single_cell_data2 <- FindClusters(single_cell_data2,
                                   , resolution = 0.15)  
 
-
 # Check different clustering results
 head(single_cell_data2@meta.data)
 
-
-# run the umap again 
-
-#single_cell_data2<- RunUMAP(single_cell_data2, dims = 1:25)
+# single_cell_data2<- RunUMAP(single_cell_data2, dims = 1:25)
 # check cluster names, choose cluster of choice
 Idents(single_cell_data2) <- "CellType"
 # how cell types are present 
 levels(Idents(single_cell_data2))
 # the cell counts  per cell type 
 table(Idents(single_cell_data2))
-
 
 # Visualise the UMAP clusters 
 umap_plot <- DimPlot(single_cell_data2,
@@ -343,22 +312,17 @@ expr_matrix <- GetAssayData(single_cell_data2, assay = "RNA", layer = "data")
 # Run wilcoxauc on the matrix and the cell type labels
 de_results <- wilcoxauc(expr_matrix, 
                         y = single_cell_data2$CellType)
-
-
-
 # View top 6 genes
 head(de_results)
 
-# 14 scRNA-seq downstream analysis ----
+# 8 scRNA-seq downstream analysis ----
 #select the significant genes  with an AUC greater 0.5
 sig_genes <- de_results %>%
   filter(padj < 0.05,
          logFC > 0,
          auc > 0.5)
 
-
-
-# 14.1 scRNA_seq functions -----
+## 8.1 scRNA_seq functions -----
 # make a function that will filter for the top genes 
 # The function returns df of top genes of interest 
 cluster_top_genes_fun <- function(cluster_list,        # list containing each cluster dataframe
@@ -391,42 +355,7 @@ cluster_top_genes_fun <- function(cluster_list,        # list containing each cl
   return(filtered)
 }
 
-
-
-# This function compares the top25 bulk and top25 scrna genes to see if  two list have same genes
-# print common and missing for each list. 
-# The function was created from previous codes 
-
-compare_gene_lists <- function(list_bulk, list_scrna) {
-  
-  # find common genes
-  common_genes <- intersect(list_bulk, list_scrna)    # list of  common  in top 25 for bulk and scRNA lists
-  
-  # common and missing genes print outs 
-  cat("Genes common between bulk and scRNA:\n")      
-  print(common_genes)
-  
-  # genes in bulk not in scRNA
-  not_in_scrna <- setdiff(list_bulk, list_scrna)
-  cat("\nGenes in bulk but not in scRNA:\n")
-  print(not_in_scrna)
-  
-  # genes in scRNA not in bulk
-  not_in_bulk <- setdiff(list_scrna, list_bulk)
-  cat("\nGenes in scRNA but not in bulk:\n")
-  print(not_in_bulk)
-  
-  # return a list with all three sets for further use
-  invisible(list(common = common_genes,
-                 bulk_only = not_in_scrna,
-                 scrna_only = not_in_bulk))
-}
-
-
-
 # create a volin plot function 
-
-
 plot_violin_genes_plot <- function(
     seurat_obj,
     gene_list,
@@ -466,8 +395,7 @@ plot_violin_genes_plot <- function(
   return(combined)
 }
 
-
-#  14.2 scRNA_seq function call ----- 
+## 8.2 scRNA_seq function call ----- 
 
 colnames(sig_genes)
 
@@ -582,7 +510,6 @@ top25_scrna_act_mo <- cluster_top_genes_fun(cluster_list = cluster_list,
                                             )
 
 
-
 # combine all the top 25 genes into single tibble 
 top25_scrna_all <- bind_rows(top25_scrna_cDC1 %>% 
                                mutate(Cell_type = "cDC1"),
@@ -627,7 +554,7 @@ top25_scrna_all <- top25_scrna_all %>%
 
 head(top25_scrna_all)
 
-#  find common genes btw the technologies 
+# find common genes btw the technologies 
 
 cell_gene_table  # the bulk RNA-seq table 
 top25_scrna_all   # scrna RNA-seq table 
@@ -649,7 +576,6 @@ colnames(overlap_genes)
 overlap_genes_final_list <- overlap_genes %>%
   select(Cell:Gene)
 
-
 # pivot the overlap_gene final list wide to generate a table 
 overlap_gene_table_wide <- overlap_genes_final_list%>%
   group_by(Cell) %>%
@@ -659,7 +585,6 @@ overlap_gene_table_wide <- overlap_genes_final_list%>%
     .groups = "drop"
     ) %>%
   arrange(Cell)
-
 
 # Format  and customise the gt table
 gene_overlap_gt <- overlap_gene_table_wide %>%
@@ -708,98 +633,12 @@ gene_overlap_gt <- overlap_gene_table_wide %>%
 
 gene_overlap_gt
 
-
 gtsave(
   gene_overlap_gt,
   filename = "plots/scrna_plot/bulk_vs_scRNA_shared_genes.pdf",
   vwidth = 2000,
   vheight = 1500
 )
-
-
-
-
-
-# check if there commom genes btw the top genes for each RNA-Seq data sets 
-#compare_results <- compare_gene_lists(list_bulk = top25_cDC1_genes$symbol,
-#list_scrna = top25_cDC1_cluster$feature
-# )
-
-#compare_results <- compare_gene_lists(list_bulk = top25_cDC2_genes$symbol,
-# list_scrna = top25_cDC2_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_cDC2_genes$symbol,
-# list_scrna = top25_act_cDC2_cluster$feature
-# )
-
-#compare_results <- compare_gene_lists(list_bulk = top25_DC3_genes$symbol,
-#list_scrna = top25_DC3_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_DC3_genes$symbol,
-#list_scrna = top25_act_DC3_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_tDC_genes$symbol,
-#list_scrna = top25_tDC_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_pDC_genes$symbol,
-#list_scrna = top25_pDC_cluster$feature
-# )
-
-#compare_results <- compare_gene_lists(list_bulk = top25_pDC_genes$symbol,
-#list_scrna = top25_act_pDC_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_mo1_genes$symbol,
-# list_scrna = top25_mo1_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_mo1_genes$symbol,
-#list_scrna = top25_act_mo_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_mo2_genes$symbol,
-#list_scrna = top25_act_mo_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_mo2_genes$symbol,
-#list_scrna = top25_moint_2_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_moint_genes$symbol,
-#list_scrna = top25_moint_2_cluster$feature
-#)
-
-#compare_results <- compare_gene_lists(list_bulk = top25_mo2_genes$symbol,
-#list_scrna = top25_moint_2_cluster$feature
-# )
-
-
-
-
-
-# genes to be plotted 
-#genes = c("CLEC9A","CLNK","TACSTD2")
-
-#vln_shared_right <- plot_violin_genes_plot(seurat_obj = single_cell_data2,
-#  gene_list = genes,
-# main_title = "Bulk Marker Gene Expression",
-# pt_size = 0.1
-#)
-
-#print(vln_shared_right)
-
-
-
-#table(sig_genes$group)
-
-
-#cluster1 <- sig_genes %>% filter(group == "cDC1")
-
-
 
 
 # function call 
@@ -821,8 +660,7 @@ scrna_save_plot_with_ggsave(
   height = 6
 )
 
-## statistical performance of the genes 
-
+# 9. statistical performance of the genes ----
 
 #statistical performance of each genes
 
