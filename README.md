@@ -11,5 +11,6 @@ data/bulkRNASeq/se.rds   for the bulk RNA-seq dataset  and
 data/scRNASeq/seu.rds    for the single cell dataset
 
 ## Running the analyses:  
-bulk RNA-seq analysis was performed by : scripts/bulk_rscript.R
+bulk RNA-seq analysis was performed by: scripts/bulk_rscript.R
+
 Single-cell RNA-seq analysis: scripts/scrna_rscript.R
