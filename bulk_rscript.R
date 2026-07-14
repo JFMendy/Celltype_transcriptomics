@@ -24,7 +24,7 @@
 # 0.2 read in the data ----
 ## read in the bulk RNA-seq data 
 
-mydata_bulk_RNA <- readRDS(file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/bulkRNASeq/se.rds" )
+mydata_bulk_RNA <- readRDS("raw_data/bulkRNASeq/se.rds")
 
 ## read in the scRNA-seq  data
 #single_cell_data <- readRDS( file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/scRNASeq_annotated/hsobj_20221209_annotated.rds")
