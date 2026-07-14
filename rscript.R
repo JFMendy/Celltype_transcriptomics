@@ -172,7 +172,7 @@ grid::grid.draw(sample_demo_table)
 # Create a grob object for saving
 sample_demo_table_plot2 <- gridExtra::arrangeGrob(sample_demo_table)
 
-## 3.2 create a saving for that would wrap everthing in ggsave -----
+## 3.2 create a saving for that would wrap everything in ggsave -----
 
 
 save_plot_with_ggsave <- function(
@@ -2207,7 +2207,6 @@ for (i in names(heatmap_list)) {
     height = 6
   )
 }
-
 
 
 
