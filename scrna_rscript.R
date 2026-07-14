@@ -1,8 +1,5 @@
 
 
-
-
-
 # ============================================= Single cell Analysis =========================================================================
 
 # 0.1 load the libraries  and data -----
@@ -139,6 +136,35 @@ top10
 
 # 10  Visualisation of top variable genes ----
 
+
+
+scrna_save_plot_with_ggsave <- function(
+    plot_obj,
+    filename,
+    width,
+    height,
+    units = "in",
+    folder = "plots/scrna_plot/"
+) {
+  
+  # Create folder if needed
+  if (!dir.exists(folder)) {
+    dir.create(folder, recursive = TRUE)
+  }
+  
+  ggsave(
+    filename = file.path(folder, filename),
+    plot = plot_obj,
+    width = width,
+    height = height,
+    units = units
+  )
+  
+  message("Saved: ", file.path(folder, filename))
+}
+
+
+
 # basic VariableFeaturePlot
 plot1 <- VariableFeaturePlot(single_cell_data2, pt.size = 4)
 
@@ -168,14 +194,14 @@ scrna_top_var_genes <- plot2 +
 
 scrna_top_var_genes
 
-save_plot_with_ggsave(
+
+# call the save_plot_with_ggsave function 
+scrna_save_plot_with_ggsave(
   plot_obj = scrna_top_var_genes,
-  filename = "scrna_top_variable_genes.pdf",
-  width = 10,
+  filename = "scrna_top_var_genes.pdf",
+  width = 12,
   height = 8
 )
-
-
 
 
 
@@ -243,7 +269,7 @@ scrna_elbow_plot <- ggplot(data.frame(PC = 1:length(pca_stdev),
 scrna_elbow_plot
 
 # save the plot 
-save_plot_with_ggsave(
+scrna_save_plot_with_ggsave(
   plot_obj = scrna_elbow_plot,
   filename = "scrna_elbow_plot.pdf",
   width = 10,
@@ -300,7 +326,7 @@ umap_plot <- DimPlot(single_cell_data2,
     axis.text = element_text(size = 14, face = "bold")     # tick numbers
   )
 umap_plot
-save_plot_with_ggsave(
+scrna_save_plot_with_ggsave(
   plot_obj = umap_plot,
   filename = "umap_cell_types.pdf",
   width = 10,
@@ -445,8 +471,6 @@ plot_violin_genes_plot <- function(
 
 colnames(sig_genes)
 
-
-
 # extract a group of interest 
 cDC1_markers <- sig_genes %>%
   filter(group == "cDC1")
@@ -461,10 +485,6 @@ glimpse(cluster_list)
 # check list names 
 names(cluster_list)
 
-
-
-
-
 # call the filtering function 
 # get top 25 marker genes for cluster named "cDC1"
 
@@ -475,12 +495,10 @@ top25_scrna_cDC1 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                           min_pct_in = 70,
                                           max_pct_out = 27,
                                           top_n = 25
-)
+                                          )
 
 
 head(top25_scrna_cDC1)
-
-
 
 top25_scrna_cDC2 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                           cluster = "cDC2",
@@ -488,8 +506,7 @@ top25_scrna_cDC2 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                           min_auc =  0.60,
                                           min_pct_in =  60,
                                           max_pct_out = 41
-)
-
+                                          )
 
 
 top25_scrna_act_cDC2 <- cluster_top_genes_fun(cluster_list = cluster_list,
@@ -498,10 +515,7 @@ top25_scrna_act_cDC2 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                               min_auc =  0.62,
                                               min_pct_in =  60,
                                               max_pct_out = 41
-)
-
-
-
+                                              )
 
 top25_scrna_DC3 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          cluster = "DC3",
@@ -509,9 +523,7 @@ top25_scrna_DC3 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          min_auc =  0.60,
                                          min_pct_in =  60,
                                          max_pct_out = 41
-)
-
-
+                                         )
 
 top25_scrna_act_DC3 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                              cluster = "act DC3",
@@ -519,9 +531,7 @@ top25_scrna_act_DC3 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                              min_auc =  0.70,
                                              min_pct_in =  75,
                                              max_pct_out = 17
-)
-
-
+                                             )
 
 top25_scrna_pDC <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          cluster = "pDC",
@@ -529,9 +539,7 @@ top25_scrna_pDC <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          min_auc =  0.70,
                                          min_pct_in =  70,
                                          max_pct_out = 20
-)
-
-
+                                         )
 
 top25_scrna_act_pDC <- cluster_top_genes_fun(cluster_list = cluster_list,
                                              cluster = "act pDC",
@@ -539,9 +547,7 @@ top25_scrna_act_pDC <- cluster_top_genes_fun(cluster_list = cluster_list,
                                              min_auc =  0.70,
                                              min_pct_in =  70,
                                              max_pct_out = 20
-)
-
-
+                                             )
 
 top25_scrna_tDC <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          cluster = "tDC",
@@ -549,10 +555,7 @@ top25_scrna_tDC <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          min_auc =  0.68,
                                          min_pct_in =  67,
                                          max_pct_out = 35
-)
-
-
-
+                                         )
 
 top25_scrna_mo1 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          cluster = "mo1",
@@ -560,10 +563,7 @@ top25_scrna_mo1 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                          min_auc =  0.65,
                                          min_pct_in =  62,
                                          max_pct_out = 44
-)
-
-
-
+                                         )
 
 top25_scrna_moint_2 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                              cluster = "moint/2",
@@ -571,8 +571,7 @@ top25_scrna_moint_2 <- cluster_top_genes_fun(cluster_list = cluster_list,
                                              min_auc =  0.72,
                                              min_pct_in =  0.69,
                                              max_pct_out = 29
-)
-
+                                             )
 
 top25_scrna_act_mo <- cluster_top_genes_fun(cluster_list = cluster_list,
                                             cluster = "act mo",
@@ -580,66 +579,46 @@ top25_scrna_act_mo <- cluster_top_genes_fun(cluster_list = cluster_list,
                                             min_auc =  0.66,
                                             min_pct_in =  0.69,
                                             max_pct_out = 34
-)
-
-
+                                            )
 
 
 
 # combine all the top 25 genes into single tibble 
-
-
-top25_scrna_all <- bind_rows(
-  
-  top25_scrna_cDC1 %>% 
-    mutate(Cell_type = "cDC1"),
-  
-  top25_scrna_cDC2 %>% 
-    mutate(Cell_type = "cDC2"),
-  
-  top25_scrna_act_cDC2 %>% 
-    mutate(Cell_type = "act cDC2"),
-  
-  top25_scrna_DC3 %>% 
-    mutate(Cell_type = "DC3"),
-  
-  top25_scrna_act_DC3 %>% 
-    mutate(Cell_type = "act DC3"),
-  
-  top25_scrna_pDC %>% 
-    mutate(Cell_type = "pDC"),
-  
-  top25_scrna_act_pDC %>% 
-    mutate(Cell_type = "act pDC"),
-  
-  top25_scrna_tDC %>% 
-    mutate(Cell_type = "tDC"),
-  
-  top25_scrna_mo1 %>% 
-    mutate(Cell_type = "mo1"),
-  
-  top25_scrna_moint_2 %>% 
-    mutate(Cell_type = "moint/2"),
-  
-  top25_scrna_act_mo %>% 
-    mutate(Cell_type = "act mo")
-  
-)
-
-
+top25_scrna_all <- bind_rows(top25_scrna_cDC1 %>% 
+                               mutate(Cell_type = "cDC1"),
+                             top25_scrna_cDC2 %>% 
+                               mutate(Cell_type = "cDC2"),
+                             top25_scrna_act_cDC2 %>% 
+                               mutate(Cell_type = "act cDC2"),
+                             top25_scrna_DC3 %>% 
+                               mutate(Cell_type = "DC3"),
+                             top25_scrna_act_DC3 %>% 
+                               mutate(Cell_type = "act DC3"),
+                             top25_scrna_pDC %>% 
+                               mutate(Cell_type = "pDC"),
+                             top25_scrna_act_pDC %>% 
+                               mutate(Cell_type = "act pDC"),
+                             top25_scrna_tDC %>% 
+                               mutate(Cell_type = "tDC"),
+                             top25_scrna_mo1 %>% 
+                               mutate(Cell_type = "mo1"),
+                             top25_scrna_moint_2 %>% 
+                               mutate(Cell_type = "moint/2"),
+                             top25_scrna_act_mo %>% 
+                               mutate(Cell_type = "act mo")
+                             )
 
 
 top25_scrna_all <- top25_scrna_all %>%
-  select(
-    Cell_type,
-    feature,
-    logFC,
-    auc,
-    pct_in,
-    pct_out,
-    padj,
-    everything()
-  )
+  select(Cell_type,
+         feature,
+         logFC,
+         auc,
+         pct_in,
+         pct_out,
+         padj,
+         everything()
+         )
 
 head(top25_scrna_all)
 
@@ -648,87 +627,80 @@ top25_scrna_all <- top25_scrna_all %>%
 
 head(top25_scrna_all)
 
-
 #  find common genes btw the technologies 
 
 cell_gene_table  # the bulk RNA-seq table 
 top25_scrna_all   # scrna RNA-seq table 
 
-
-library(dplyr)
-
-
-
-overlap_genes <- inner_join(
-  cell_gene_table,
-  top25_scrna_all,
-  by = c(
-    "Cell" = "Cell_type",
-    "Gene" = "feature"
-  )
-  
-)
+# combine the bulk RNA-seq and scrna 
+overlap_genes <- inner_join(cell_gene_table,
+                            top25_scrna_all,
+                            by = c(
+                              "Cell" = "Cell_type",  # column name of the bulk RNA-seq table 
+                              "Gene" = "feature"     # column names of scrna table 
+                              )
+                            )
 
 # create a list of bulk-RNA-seq top 25 genes per cell 
-
-overlap_genes
+# check colnames of the overlap_genes object 
 colnames(overlap_genes)
+
+# extract the cell type and gene symbol columns 
 overlap_genes_final_list <- overlap_genes %>%
   select(Cell:Gene)
 
-overlap_genes_final_list
 
-
+# pivot the overlap_gene final list wide to generate a table 
 overlap_gene_table_wide <- overlap_genes_final_list%>%
   group_by(Cell) %>%
   summarise(
     Shared_genes = paste(Gene, collapse = ", "),
     Number_of_genes = n(),
     .groups = "drop"
-  ) %>%
+    ) %>%
   arrange(Cell)
 
 
-# Format as gt table
+# Format  and customise the gt table
 gene_overlap_gt <- overlap_gene_table_wide %>%
   gt() %>%
   
-  # Rename column headers
+  # rename column headers
   cols_label(
     Cell = "Cell Type",
     Shared_genes = "Shared Genes",
     Number_of_genes = "Number of Shared Genes"
-  ) %>%
+    ) %>%
   
-  # Left align text
+  # left align text
   cols_align(
     align = "left",
     columns = everything()
-  ) %>%
+    ) %>%
   
-  # Bold cell type column
+  # bold cell type column
   tab_style(
     style = cell_text(weight = "bold"),
     locations = cells_body(columns = Cell)
-  ) %>%
+    ) %>%
   
-  # Header formatting
+  # header formatting
   tab_style(
     style = list(
       cell_fill(color = "grey90"),
       cell_text(weight = "bold")
     ),
     locations = cells_column_labels()
-  ) %>%
+    ) %>%
   
-  # Table options
+  # table options
   tab_options(
     table.font.size = 12,
     data_row.padding = px(4),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
     table_body.hlines.color = "grey80"
-  ) %>%
+    ) %>%
   
   # Alternating row shading
   opt_row_striping()
@@ -739,7 +711,7 @@ gene_overlap_gt
 
 gtsave(
   gene_overlap_gt,
-  filename = "plots/bulk_vs_scRNA_shared_genes.pdf",
+  filename = "plots/scrna_plot/bulk_vs_scRNA_shared_genes.pdf",
   vwidth = 2000,
   vheight = 1500
 )
@@ -842,7 +814,7 @@ vln_shared_right <- plot_violin_genes_plot(seurat_obj = single_cell_data2,
 
 print(vln_shared_right)
 
-save_plot_with_ggsave(
+scrna_save_plot_with_ggsave(
   plot_obj = vln_shared_right,
   filename = "Bulk_marker_gene_violin_plot.pdf",
   width = 15,
@@ -858,8 +830,7 @@ stat_table_fun <- function(df,
                            group,
                            min_auc = 0,
                            min_pct_in = 0,
-                           max_pct_out = 1
-) {
+                           max_pct_out = 1) {
   
   # Filter by criteria & cluster
   stat_info <- df %>%
@@ -882,7 +853,7 @@ stat_table_fun <- function(df,
     head(25)
   
   return(stat_table)
-}
+  }
 
 
 #call the function 
@@ -892,7 +863,7 @@ cell_table_stat <- stat_table_fun(df = sig_genes,
                                   min_auc = 0.741,
                                   min_pct_in = 60,
                                   max_pct_out = 25
-)
+                                  )
 
 print(cell_table_stat)
 
@@ -918,7 +889,7 @@ cDC1_scrna_gene_performance <- ggplot(cell_table_stat, aes(x = pct_in, y = auc))
     y = "AUC (marker discrimination)",
     color = "% Expression in other clusters",
     title = "Top cDC1 Gene Perfamnce"
-  ) +
+    ) +
   theme_minimal() +
   theme(
     plot.title = element_text(size = 20,
@@ -928,21 +899,26 @@ cDC1_scrna_gene_performance <- ggplot(cell_table_stat, aes(x = pct_in, y = auc))
                                 size = 16),       
     axis.text    = element_text(face = "bold", 
                                 size = 12)       
-  ) +
+    ) +
   geom_text(
     data = subset(cell_table_stat, pct_in >= pct_in_cut & auc >= auc_cut),
     aes(label = feature),
     size = 5,
     vjust = -1
-  )
-
+    )
 
 cDC1_scrna_gene_performance 
 
-save_plot_with_ggsave(plot_obj = cDC1_scrna_gene_performance,
+
+# save the figure 
+
+scrna_save_plot_with_ggsave(plot_obj = cDC1_scrna_gene_performance,
                       filename = "cDC1_scrna_gene_performance.pdf",
                       width = 15,
                       height = 15)
+
+
+
 
 
 make_styled_stat_table <- function(stat_df,
@@ -951,8 +927,7 @@ make_styled_stat_table <- function(stat_df,
                                    digits = 2,
                                    bootstrap_options = c("striped", "hover"),
                                    latex_options = c("striped", "hold_position"),
-                                   highlight_bg = "#DFF0D8"
-) {
+                                   highlight_bg = "#DFF0D8") {
   
   # generate row indices matching the highlight condition
   # stat_df must be the same data used for table
@@ -964,7 +939,7 @@ make_styled_stat_table <- function(stat_df,
       caption = "<b> CDC1 Marker Performance </b>",
       digits = digits,
       format = "html"
-    ) %>%
+      ) %>%
     kable_styling(
       full_width = FALSE,
       bootstrap_options = bootstrap_options,
@@ -974,27 +949,7 @@ make_styled_stat_table <- function(stat_df,
       row_idx, 
       background = highlight_bg
     )
-}
-
-
-
-
-
-
-# call the function 
-styled_table <- make_styled_stat_table(stat_df = cell_table_stat,
-                                       highlight_condition = auc > 0.84 & pct_out < 12,
-                                       caption = "Marker statistics Performance For Each Cell",
-                                       digits = 2,
-                                       highlight_bg = "#DFF0D8"
-)
-
-styled_table
-
-
-
-
-
+  }
 
 
 make_styled_stat_gt <- function(stat_df,
@@ -1048,24 +1003,41 @@ make_styled_stat_gt <- function(stat_df,
     )
   
   return(gt_table)
-}
+  }
 
 
-styled_table <- make_styled_stat_gt(
-  stat_df = cell_table_stat,
-  highlight_condition = auc > 0.84 & pct_out < 12,
-  caption = "cDC1 Marker Performance",
-  digits = 2
-)
+
+# call the function 
+styled_table <- make_styled_stat_table(stat_df = cell_table_stat,
+                                       highlight_condition = auc > 0.84 & pct_out < 12,
+                                       caption = "Marker statistics Performance For Each Cell",
+                                       digits = 2,
+                                       highlight_bg = "#DFF0D8"
+                                       )
 
 styled_table
 
 
 
+
+
+# call the make_styled_stat_gt function 
+styled_table <- make_styled_stat_gt(
+  stat_df = cell_table_stat,
+  highlight_condition = auc > 0.84 & pct_out < 12,
+  caption = "cDC1 Marker Performance",
+  digits = 2
+  )
+
+# print the table 
+styled_table
+
+
+# the statistics performance 
 gtsave(
   styled_table,
-  filename = "plots/cDC1_marker_statistics.png"
-)
+  filename = "plots/scrna_plot/cDC1_marker_statistics.png"
+  )
 
 
 
