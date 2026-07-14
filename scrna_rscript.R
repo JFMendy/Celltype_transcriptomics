@@ -12,7 +12,7 @@
 
 
 ## read in the scRNA-seq  data
-single_cell_data <- readRDS( file = "C:/Users/user/Desktop/MSc_Theses/DIT_MSc_thesis/rawData/scRNASeq_annotated/hsobj_20221209_annotated.rds")
+single_cell_data <-readRDS("raw_data/scRNASeq/seu.rds")
 
 
 # 1 preprocess the data -------
