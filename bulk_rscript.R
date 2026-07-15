@@ -15,7 +15,6 @@
   library(ggrepel)
   library(gt)
   library(scales)
-  #library(kableExtra)
   library(ComplexHeatmap)
   library(patchwork)
   }
@@ -29,11 +28,14 @@ mydata_bulk_RNA <- readRDS("data/bulkRNASeq/se.rds")
 
 # analysis workflow 
 
+
 # 1. Data inspect the data and extract the count data set ================================================================================================
+
 
 
 ## 1.1 make a copy of original data---- 
 mydata_bulk_RNA2 <- mydata_bulk_RNA
+
 
 
 ## 1.2 Inspect the SummerisedExperiemnt structure --------------------------------------------------------------------------------------------------------
@@ -62,6 +64,7 @@ glimpse(mydata_bulk_RNA2)
 
 # detail structure of the data file 
 str(mydata_bulk_RNA2)
+
 
 
 
@@ -116,6 +119,7 @@ all(colnames(assay(mydata_bulk_RNA2, "counts")) ==
 
 
 
+
 # 3 exploratory analysis and visualisation =====================================================================================================================
 
 # create a saving function 
@@ -144,6 +148,7 @@ save_plot_with_ggsave <- function(
   
   message("Saved: ", file.path(folder, filename))
 }
+
 
 ## 3.1 Exploratory analysis: --------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -456,6 +461,7 @@ df_detected_qc_metrics_plot
 
 
 
+
 ## 3.2 call the saving function:-------------------------------------------------------------------------------------------------------
  
 # call the save_plot_with_ggsave function 
@@ -484,10 +490,6 @@ save_plot_with_ggsave(
   width = 12,
   height = 8
 )
-
-
-
-
 
 
 
@@ -677,16 +679,13 @@ save_plot_with_ggsave(
 
 
 
-
-
-
-
 # 5 Differential gene expression analysis ==================================================================================================================================================================
 # pairwise analysis was performed (1 vs 1)
 
 # check coldata column name 
 names(colData(mydata_bulk_RNA2))
 names(rowData(mydata_bulk_RNA2))
+
 
 
 # 5.1 Data wrangling ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -770,11 +769,13 @@ rowData(dds_obj)$gene_biotype <- biotype_lookup[ensembl_ids_clean[matched_genes]
 rowData(dds_obj)
 
 
+
 # 5.2  run DESeq2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 dds_pairwise <- DESeq(dds_obj)
 
 #check comparisons (coefficients)
 resultsNames(dds_pairwise)
+
 
 ## 5.2.1 Deseq2 results retrieval ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -960,6 +961,7 @@ b_cdc1_volcano_plot <- ggplot(res_B_cDC1_noNA_df,
   )
 
 b_cdc1_volcano_plot
+
 
 
 
@@ -1236,6 +1238,7 @@ plot_volcano_DESeq2 <- function(
 
 
 
+
 ## 5.2.3  call the DESeq functions in 5.2.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # call the DESeq2 comparison and result retrieval function 
@@ -1284,6 +1287,7 @@ save_plot_with_ggsave(plot_obj = b_cdc1_volcano_plot,
                       width = 20,
                       height = 20
                       )
+
 
 
 
@@ -1636,21 +1640,24 @@ generate_heatmap <- function(heatmap_data,
 
 
 
+
 # 5.3.1 call the downstream analysis functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # call the pairwise function (get_pairwise_DEGs) and wrangle the data 
+# shows which comparison is be process at a time 
+# it returns 2 outputs, resuslt and a summary table of up-and-down regulated genes for each comparsions  
 pairwise_output <- get_pairwise_DEGs(
   dds_object = dds_pairwise,
   cell_type_col = "cell_types",
   log2FC_threshold = 0
   )
 
-# check the out of the pairwise function 
+# check the output of the pairwise function 
 names(pairwise_output)
 pairwise_output$summary
 
 
-# arrange alphabetically by comparison name
+# convert the summary from get_pairwise function into table 
 summary_tbl <- pairwise_output$summary %>%
   arrange(comparison)
 
@@ -1732,9 +1739,6 @@ gt_tbl_pub <- summary_tbl %>%
   # row striping
   opt_row_striping()
 
-# display table
-gt_tbl_pub
-
 # display the table
 gt_tbl_pub
 
@@ -1770,7 +1774,6 @@ B_up_df %>%
   group_by(gene_id) %>%
   summarise(n_comparisons = n_distinct(comparison)) %>%
   arrange(desc(n_comparisons))
-
 
 
 # call the function that would return most differential expressed genes 
@@ -1859,7 +1862,7 @@ marker_gene_gt
 # then save the table for the top markers 
 gtsave(
   marker_gene_gt,
-  filename = "plots/bulk_plot/top25_marker_genes_table.pdf"
+  filename = "plots/bulk_plot/top25_marker_genes_table.png"
 )
 
 
@@ -1997,22 +2000,11 @@ gtsave(
 
 
 
-# 5.5 Heat map visualisation ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-# extract the top 3 genes from each df to create heat map 
-# create a list of dfs 
-dfs <- list(top25_B_genes,
-            top25_cDC1_genes, 
-            top25_cDC2_genes,
-            top25_DC3_genes,
-            top25_mo1_genes,
-            top25_mo2_genes,
-            top25_moint_genes,
-            top25_pDC_genes,
-            top25_tDC_genes)
 
+# 5.5 Heat map visualisation ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # again pick the top 3 genes from each cell type and make global heatmap to show gene cell type association 
-top3_combine_genes <- imap_dfr(dfs, ~ { .x %>%
+top3_combine_genes <- imap_dfr(cell_dfs, ~ { .x %>%
     
     # take first 3 rows
     slice_head(n = 3) %>%  
@@ -2109,79 +2101,46 @@ b_cell_heatmap <- generate_heatmap(heatmap_data = heatmap_data_B,
                                  main_title = "Top B cell markers",
                                  gene_symbols = heatmap_data_B$top_genes$symbol
                                  )
-
-b_cell_heatmap 
-
 # cDC1 heat map 
 cDC1_heatmap <- generate_heatmap(heatmap_data = heatmap_data_cDC1,
                                  main_title = "Top cDC1 markers",
                                  gene_symbols = heatmap_data_cDC1$top_genes$symbol
                                  )
-cDC1_heatmap
-
-
 # cDC2 heat map 
 cDC2_heatmap <- generate_heatmap(heatmap_data = heatmap_data_cDC2,
                                  main_title = "Top cDC2 markers",
                                  gene_symbols = heatmap_data_cDC2$top_genes$symbol
                                  )
-
-
-cDC2_heatmap
-
-
 # DC3 heat map 
 DC3_heatmap <- generate_heatmap(heatmap_data = heatmap_data_DC3 ,
                                  main_title = "Top DC3 markers",
                                  gene_symbols = heatmap_data_DC3$top_genes$symbol
                                 )
-
-DC3_heatmap
-
-
 # pDC heat map 
 pDC_heatmap <- generate_heatmap(heatmap_data = heatmap_data_pDC,
                                  main_title = "Top pDC markers",
                                  gene_symbols = heatmap_data_pDC$top_genes$symbol
                                 )
-
-pDC_heatmap
-
-
 # tDC heat map 
 tDC_heatmap <- generate_heatmap(heatmap_data = heatmap_data_tDC,
                                  main_title = "Top tDC markers",
                                  gene_symbols = heatmap_data_tDC$top_genes$symbol
                                 )
-
-tDC_heatmap
-
-
 # mo1 heat map 
 mo1_heatmap <- generate_heatmap(heatmap_data = heatmap_data_mo1,
                                  main_title = "Top mo1 markers",
                                  gene_symbols = heatmap_data_mo1$top_genes$symbol
                                 )
-
-mo1_heatmap
-
-
-
 # mo2 heat map 
-
 mo2_heatmap <- generate_heatmap(heatmap_data = heatmap_data_mo2,
                                  main_title = "Top mo2 markers",
                                  gene_symbols = heatmap_data_mo2$top_genes$symbol
                                 )
-mo2_heatmap
-
-
 # moint heat map 
 moint_heatmap <- generate_heatmap(heatmap_data = heatmap_data_moint,
                                  main_title = "Top moint markers",
                                  gene_symbols = heatmap_data_moint$top_genes$symbol
                                  )
-moint_heatmap
 
 
 # make a list of all the heatmaps 
@@ -2203,7 +2162,6 @@ save_complex_heatmap <- function(heatmap_obj,
                                  filename,
                                  width = 8,
                                  height = 6) {
-  
   pdf(
     filename,
     width = width,
@@ -2214,7 +2172,6 @@ save_complex_heatmap <- function(heatmap_obj,
   
   dev.off()
 }
-
 
 
 # call the heat map saving funtion using a for loop
