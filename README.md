@@ -7,8 +7,8 @@ The bulk and single cell RNA-seq dataset are provided as GItHub Release assets. 
 "seu.rds" => scRNA-seq Seurat object.
 
 Following the downloads, file paths would be: 
-data/bulkRNASeq/se.rds   for the bulk RNA-seq dataset  and 
-data/scRNASeq/seu.rds    for the single cell dataset
+"data/bulkRNASeq/se.rds"   for the bulk RNA-seq dataset  and 
+"data/scRNASeq/seu.rds"    for the single cell dataset
 
 ## Running the analyses:  
 bulk RNA-seq analysis was performed by: scripts/bulk_rscript.R
