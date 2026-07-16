@@ -4,6 +4,7 @@
 ## DATA Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
 - The single-cell RNA-seq data is stored as Seurat object
+The seurat object is large (9 GB) hence, would need a large memeory (RAM) to load the data. 
   
 ### How to access the used data for this analysis
 Both files can be downloaded from Zenodo. Please download the data from this urls: "https://zenodo.org/uploads/21396480"
