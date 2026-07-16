@@ -8,7 +8,7 @@
 - The proceessed datasets used in the analyses are not found in GitHub but Zenodo. Only the scripts and plots are in GitHub. 
   
 ### How to access the used data for this analysis
-Both files can be downloaded from Zenodo. Please download the data from this urls: "10.5281/zenodo.21398652"
+Both files can be downloaded from Zenodo. Please download the data from this urls: "[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)"
 When the files are downloaded place them in the "data" directory of the GitHub repository
 
 "se.rds"  => bulk RNA-seq SummerisedExperiment object
