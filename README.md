@@ -25,4 +25,9 @@ Following the downloads, file paths would be:
 - bulk RNA-seq analysis was performed by: scripts/bulk_rscript.R
 - Single-cell RNA-seq analysis: scripts/scrna_rscript.R
 
+### Packages Required:
+The following packages or libraries would be required to run the scripts smooths:
+- bulk_rscript.R:
+  library(lolliplot)
+
 
