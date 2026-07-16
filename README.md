@@ -14,8 +14,10 @@ When the files are downloaded place them in the "data" directory of the GitHub r
 
 ### File path: 
 Following the downloads, file paths would be: 
-"data/bulkRNASeq/se.rds"   for the bulk RNA-seq dataset  and 
-"data/scRNASeq/hsobj_20221209_annotated.rds"    for the single cell dataset
+
+"data/bulkRNASeq/se.rds"   
+
+"data/scRNASeq/hsobj_20221209_annotated.rds"  
 
 ## Running the analyses:  
 Note first run the the "bulk_rscript.R" then the "scrna_script.R"
