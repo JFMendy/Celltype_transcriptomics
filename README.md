@@ -12,6 +12,7 @@ When the files are downloaded place them in the "data" directory of the GitHub r
 "se.rds"  => bulk RNA-seq SummerisedExperiment object
 "hsobj_20221209_annotated.rds" => scRNA-seq Seurat object.
 
+### File path: 
 Following the downloads, file paths would be: 
 "data/bulkRNASeq/se.rds"   for the bulk RNA-seq dataset  and 
 "data/scRNASeq/hsobj_20221209_annotated.rds"    for the single cell dataset
