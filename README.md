@@ -1,7 +1,7 @@
 # MSc_thesis_analysis
 ## Life Science MSc thesis project
 
-### DATA Files description:
+### Data Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
 - The single-cell RNA-seq data is stored as Seurat object
 - Both objects contains expression data and associated metadata required for downstream analysis.
