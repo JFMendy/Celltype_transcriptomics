@@ -28,7 +28,10 @@ Following the downloads, file paths would be:
 A renv was was set up for analyses reproduciblity and package management. 
 To recreate these analyses: 
 - open the "MSc_thesis_analysis.Rproj"
-- run this code: "renv::restore()" on the R console. R would automatically install required packages and their dependencies.
+- Run the following codes on the R console:
+  -- install.packages("renv")
+  -- renv::restore()
+ R would automatically install required packages and their dependencies.
 
 ### Running the analyses: 
 The analyses are structured sequencially. To recreate these analyses, the scripts should run as indicated below. 
@@ -36,6 +39,11 @@ The analyses are structured sequencially. To recreate these analyses, the script
 - Note, first run the "bulk_rscript.R" then the "scrna_script.R"
 - bulk RNA-seq analysis was performed by: codes/bulk_rscript.R
 - Single-cell RNA-seq analysis: codes/scrna_rscript.R
+
+## Ouput Files 
+The generated plots are stored based on the scripts. 
+The bulk script would store its output in  => plots/bulk_plot/
+While the single-cell script => plots/scrna_plot/ 
 
 **R Version**
 
