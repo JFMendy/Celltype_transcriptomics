@@ -31,8 +31,9 @@ To recreate these analyses:
 - run this code: "renv::restore()" on the R console. R would automatically install required packages and their dependencies.
 
 ### Running the analyses: 
-- The seurat object is large (9 GB) hence, would need a large memeory (RAM) to load the data.
+The analyses are structured sequencially. To recreate these analyses, the scripts should run as indicated below. 
+- The seurat object is large (7GB) hence, would need a large memeory (RAM) to load the data.
 - Note, first run the "bulk_rscript.R" then the "scrna_script.R"
-- bulk RNA-seq analysis was performed by: scripts/bulk_rscript.R
-- Single-cell RNA-seq analysis: scripts/scrna_rscript.R
+- bulk RNA-seq analysis was performed by: codes/bulk_rscript.R
+- Single-cell RNA-seq analysis: codes/scrna_rscript.R
 
