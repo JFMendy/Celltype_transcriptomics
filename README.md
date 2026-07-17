@@ -1,5 +1,11 @@
-# MSc_thesis_analysis
-## Life Science MSc thesis project
+# Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
+> **Master of Science (MSc) Thesis Analysis**  
+> **Author:** [Joseph F Mendy]  
+> **Contact:** [joseph.mendy@stud.th-deg.de]  
+> **Institution:** [Deggendorf Institute of Technology]
+
+## Project goal:
+This repository computational analysis R scripts used for these analyses. The aim of the project was to access the capability of bulk RNA-seq as a standalone tool to characterise immune cells. While single-cell analysis was used to ascertain the results obtained from bulk RNA-seq. 
 
 ### Data Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
