@@ -1,8 +1,7 @@
 # Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
 > **Master of Science (MSc) Thesis Analysis**  
 > **Author:** Joseph F Mendy  
-> **Contact:** joseph.mendy@stud.th-deg.de
-> 
+> **Contact:** joseph.mendy@stud.th-deg.de 
 > **Institution:** Deggendorf Institute of Technology
 
 ### Project goal:
@@ -22,16 +21,16 @@ When the files are downloaded, "se.rds"  => bulk RNA-seq SummerisedExperiment ob
 
 ### File path: 
 Following the downloads, file paths would be: 
-"data/bulkRNASeq/se.rds"   
-"data/scRNASeq/hsobj_20221209_annotated.rds" 
+- se.rds => data/bulkRNASeq/se.rds  
+- hsobj_20221209_annotated.rds => data/scRNASeq/hsobj_20221209_annotated.rds 
 
 ### R environment setup:
 A renv was was set up for analyses reproduciblity and package management. 
 To recreate these analyses: 
 - open the "MSc_thesis_analysis.Rproj"
 - Run the following codes on the R console:
-  -- install.packages("renv")
-  -- renv::restore()
+  - install.packages("renv")
+  - renv::restore()
  R would automatically install required packages and their dependencies.
 
 ### Running the analyses: 
