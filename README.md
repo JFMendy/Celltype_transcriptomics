@@ -1,7 +1,8 @@
 # Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
 > **Master of Science (MSc) Thesis Analysis**  
 > **Author:** Joseph F Mendy  
-> **Contact:** joseph.mendy@stud.th-deg.de 
+> **Contact:** joseph.mendy@stud.th-deg.de
+> 
 > **Institution:** Deggendorf Institute of Technology
 
 ### Project goal:
@@ -45,9 +46,9 @@ The generated plots are stored based on the scripts.
 The bulk script would store its output in  => plots/bulk_plot/
 While the single-cell script => plots/scrna_plot/ 
 
-**R Version**
+**R Version:** 4.4.3
+**Rstudio version:**
 
-  
 ### Packages 
 **Bulk RNA-seq Analysis**
 - DESeq2
