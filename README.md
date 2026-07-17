@@ -37,3 +37,25 @@ The analyses are structured sequencially. To recreate these analyses, the script
 - bulk RNA-seq analysis was performed by: codes/bulk_rscript.R
 - Single-cell RNA-seq analysis: codes/scrna_rscript.R
 
+**R Version**
+
+  
+### Packages 
+**Bulk RNA-seq Analysis**
+- DESeq2
+- SummarizedExperiment
+- biomaRt
+
+**Single-cell Analysis**
+- Seurat
+- presto
+- ggplot2
+- patchwork
+
+**Visualisation**
+- ggplot2
+- ComplexHeatmap
+- patchwork
+- gt
+- kableExtra
+- viridis
