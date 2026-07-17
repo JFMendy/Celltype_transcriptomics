@@ -30,7 +30,8 @@ To recreate these analyses:
 - open the "MSc_thesis_analysis.Rproj"
 - Run the following codes on the R console:
   - install.packages("renv")
-  - renv::restore()
+  - renv::restore().
+    
  R would automatically install required packages and their dependencies.
 
 ### Running the analyses: 
