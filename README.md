@@ -5,6 +5,7 @@
 > **Institution:** Deggendorf Institute of Technology
 
 ### Project goal:
+This repository contains my MSc thesis in Life Science Informatics analysis. The project includes two sets of data:bulk RNA sequencing (bulk RNA-seq) and single-cell RNA sequencing (scRNA-seq).
 The aim of the project was to access the capability of bulk RNA-seq as a standalone tool to characterise immune cells. While single-cell analysis was used to ascertain the results obtained from bulk RNA-seq. 
 This repository computational analysis R scripts used for these analyses.
 
@@ -40,11 +41,16 @@ The analyses are structured sequencially. To recreate these analyses, the script
 - Note, first run the "bulk_rscript.R" then the "scrna_script.R"
 - bulk RNA-seq analysis was performed by: codes/bulk_rscript.R
 - Single-cell RNA-seq analysis: codes/scrna_rscript.R
+- The scripts also contain custom helper functions due repetitive analyses. 
 
 ## Ouput Files 
 The generated plots are stored based on the scripts. 
 The bulk script would store its output in  => plots/bulk_plot/
 While the single-cell script => plots/scrna_plot/ 
+
+
+
+
 
 **R Version:** 4.4.3
 **Rstudio version:**
