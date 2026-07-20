@@ -2,6 +2,7 @@
 > **Master of Science (MSc) Thesis Analysis**  
 > **Author:** Joseph F Mendy  
 > **Contact:** joseph.mendy@stud.th-deg.de
+> 
 > **Institution:** Deggendorf Institute of Technology
 
 ### Project goal:
