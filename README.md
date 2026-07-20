@@ -6,25 +6,26 @@
 > **Institution:** Deggendorf Institute of Technology
 
 ### Project goal:
-This repository contains my MSc thesis in Life Science Informatics analysis. The project includes two sets of data:bulk RNA sequencing (bulk RNA-seq) and single-cell RNA sequencing (scRNA-seq).
+This repository contains my MSc thesis in Life Science Informatics analysis documentation. The project includes two sets of data: bulk RNA sequencing (bulk RNA-seq) and single-cell RNA sequencing (scRNA-seq).
 The aim of the project was to access the capability of bulk RNA-seq as a standalone tool to characterise immune cells. While single-cell analysis was used to ascertain the results obtained from bulk RNA-seq. 
-This repository computational analysis R scripts used for these analyses.
+This repository also included computational analysis R scripts used for these analyses.
 
 ### Data Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
 - The single-cell RNA-seq data is stored as Seurat object
 - Both objects contains expression data and associated metadata required for downstream analysis.
-- The proceessed datasets used in the analyses are not found in GitHub but Zenodo. Only the scripts and plots are in GitHub. 
+- The proceessed datasets used in the analyses are not found in GitHub but Zenodo. Only the scripts and plots are in GitHub.
+- Also both datasets are not tracked by git.  
   
 ### How to access the used data for this analysis
-Due to the large files, the data is not tracked in this GitHUb respository. 
-Both files can be downloaded from Zenodo. Please download the data from this urls: "[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)"
-When the files are downloaded, "se.rds"  => bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => scRNA-seq Seurat object. The subfolders of this files should be placed in the "data" folder. 
+Due to the large scRNA-seq file, both files were stored in Zenodo. And could be downloaded from this url: "[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)". When the files are downloaded, "se.rds"  => bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => scRNA-seq Seurat object. The subfolders of this files should be placed in the "data" folder in repository. 
 
-### File path: 
+### File paths: 
 Following the downloads, file paths would be: 
 - se.rds => data/bulkRNASeq/se.rds  
-- hsobj_20221209_annotated.rds => data/scRNASeq/hsobj_20221209_annotated.rds 
+- hsobj_20221209_annotated.rds => data/scRNASeq/hsobj_20221209_annotated.rds
+- bulk RNA-seq analysis source code => codes/bulk_rscript.R
+- Single-cell RNA-seq analysis => codes/scrna_rscript.R
 
 ### R environment setup:
 A renv was was set up for analyses reproduciblity and package management. 
@@ -35,14 +36,12 @@ To recreate these analyses:
   - install.packages("renv")
   - renv::restore().
     
- R would automatically install required packages and their dependencies.
+R would automatically install required exact versions of packages and their dependencies used in this project stored in the renv.lock file.
 
 ### Running the analyses: 
 The analyses are structured sequencially. To recreate these analyses, the scripts should run as indicated below. 
 - The seurat object is large (7GB) hence, would need a large memeory (RAM) to load the data.
 - Note, first run the "bulk_rscript.R" then the "scrna_script.R"
-- bulk RNA-seq analysis source code: codes/bulk_rscript.R
-- Single-cell RNA-seq analysis: codes/scrna_rscript.R
 - Each script also contain custom helper functions to perform repetitive analyses.
 
 ## Ouput Files 
@@ -69,6 +68,7 @@ Note: some generated output files are intermediate objects required especially f
 **Git and Git Hub**
 
 **Bulk RNA-seq Analysis**
+- bioconductor 
 - DESeq2
 - SummarizedExperiment
 - biomaRt
