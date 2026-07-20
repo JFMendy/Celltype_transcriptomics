@@ -28,6 +28,7 @@ Following the downloads, file paths would be:
 ### R environment setup:
 A renv was was set up for analyses reproduciblity and package management. 
 To recreate these analyses: 
+- use this code and link: git clone https://github.com/USERNAME/MSc_thesis_analysis.git
 - open the "MSc_thesis_analysis.Rproj"
 - Run the following codes on the R console:
   - install.packages("renv")
@@ -39,23 +40,33 @@ To recreate these analyses:
 The analyses are structured sequencially. To recreate these analyses, the scripts should run as indicated below. 
 - The seurat object is large (7GB) hence, would need a large memeory (RAM) to load the data.
 - Note, first run the "bulk_rscript.R" then the "scrna_script.R"
-- bulk RNA-seq analysis was performed by: codes/bulk_rscript.R
+- bulk RNA-seq analysis source code: codes/bulk_rscript.R
 - Single-cell RNA-seq analysis: codes/scrna_rscript.R
-- The scripts also contain custom helper functions due repetitive analyses. 
+- Each script also contain custom helper functions to perform repetitive analyses.
 
 ## Ouput Files 
-The generated plots are stored based on the scripts. 
-The bulk script would store its output in  => plots/bulk_plot/
-While the single-cell script => plots/scrna_plot/ 
+During the running of the source codes, each script automatically generate's figures, tables and diffferential expression results. The generated plots are stored as indicalted. 
+- The bulk script would store its output in  => plots/bulk_plot/
+- While the single-cell script => plots/scrna_plot/
+- The plots produced include:
+-- PCA plots
+  UMAP plots
+  Heatmaps
+  Volcano plots
+  Violin plots
+  Feature plots
+  Marker gene tables
+  Differential expression tables
+Note: some generated output files are intermediate objects required especially for single-cell analysis comaparsion may to be stored in the repository but remain as output in the R global environment. 
 
 
 
 
-
+## Software requirement 
 **R Version:** 4.4.3
 **Rstudio version:**
+**Git and Git Hub**
 
-### Packages and dependecies 
 **Bulk RNA-seq Analysis**
 - DESeq2
 - SummarizedExperiment
@@ -64,11 +75,10 @@ While the single-cell script => plots/scrna_plot/
 **Single-cell Analysis**
 - Seurat
 - presto
-- ggplot2
-- patchwork
 
 **Visualisation**
 - ggplot2
+- tidyverse
 - ComplexHeatmap
 - patchwork
 - gt
