@@ -49,7 +49,7 @@ While the single-cell script => plots/scrna_plot/
 **R Version:** 4.4.3
 **Rstudio version:**
 
-### Packages 
+### Packages and dependecies 
 **Bulk RNA-seq Analysis**
 - DESeq2
 - SummarizedExperiment
