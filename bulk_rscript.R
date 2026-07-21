@@ -9,7 +9,7 @@
   library(biomaRt)
   library(tidyverse)
   library(factoextra)
-  library(lolliplot)
+  #library(lolliplot)
   library(gridExtra) 
   library(grid)
   library(ggrepel)
