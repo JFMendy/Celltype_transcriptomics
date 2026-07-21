@@ -9,7 +9,6 @@
   library(biomaRt)
   library(tidyverse)
   library(factoextra)
-  #library(lolliplot)
   library(gridExtra) 
   library(grid)
   library(ggrepel)
@@ -1507,109 +1506,56 @@ top_genes_fn <- function(df_hd_data, top_n = Inf, min_comparisons = 1) {
 
 
 
-# This function process and return data that can be used to generate a heat map
-create_heatmap_data <- function(dds_pairwise, 
-                                top_genes_df, 
-                                metadata_cols = "cell_types", 
-                                use_vst = TRUE) {
-  
-  
-  # check that metadata columns exist
-  
-  missing_cols <- setdiff(metadata_cols, colnames(colData(dds_pairwise)))
-  if(length(missing_cols) > 0) {
-    stop("These metadata columns are missing in colData(dds_pairwise): ", 
-         paste(missing_cols, collapse=", "))
-  }
-  
-  
-  # check that genes exist in the assay
-  
-  missing_genes <- setdiff(top_genes_df$gene_id, rownames(dds_pairwise))
-  if(length(missing_genes) > 0) {
-    warning("Some genes in top_genes_df are not found in the assay: ", 
-            paste(missing_genes, collapse=", "))
-  }
-  
-  # Keep only genes that exist
-  valid_genes <- intersect(top_genes_df$gene_id, rownames(dds_pairwise))
-  if(length(valid_genes) == 0) {
-    stop("No valid genes found in the assay. Cannot generate heatmap data.")
-  }
-  
-  
-  # transform counts
-  
-  if(use_vst) {
-    message("Using VST transformation (faster for large datasets)")
-    vsd <- vst(dds_pairwise, blind = FALSE)
-  } else {
-    message("Using rlog transformation (better for small datasets)")
-    vsd <- rlog(dds_pairwise, blind = FALSE)
-  }
-  
-  
-  # extract expression matrix for top genes
-  
-  mat <- assay(vsd)[valid_genes, , drop = FALSE]
-  
-  # Scale by row (z-score)
-  mat_scaled <- t(scale(t(mat)))
-  
-  
-  #  prepare sample annotations
-  
-  annotation_df <- as.data.frame(colData(dds_pairwise)[, metadata_cols, drop = FALSE])
-  
-  # ensure rownames match colnames of matrix
-  rownames(annotation_df) <- colnames(mat_scaled)
-  
-  
-  # return all components in a list
-  
-  return(list(
-    scaled_matrix = mat_scaled,      # Scaled expression matrix (z-score)
-    annotation_df = annotation_df,   # Sample metadata
-    top_genes = top_genes_df,        # Original top genes dataframe
-    transformation = ifelse(use_vst, "vst", "rlog")  # Transformation method used
-  ))
-}
-
-
-
-
-# This functions displays a specified gene numbers in a heat map
-
+# Heatmap generator with unified expression scaling and fixed cell-type palette
 generate_heatmap <- function(heatmap_data,
                              main_title = "Top 25 cDC1 cells markers",
-                             gene_symbols = NULL) {
+                             gene_symbols = NULL,
+                             z_min = -2,
+                             z_max = 2,
+                             legend_breaks = c(-2, -1, 0, 1, 2),
+                             cell_colors = c(
+                               "cDC1"   = "#E69F00",
+                               "cDC2"   = "#D55E00",
+                               "DC3"    = "#CC79A7",
+                               "pDC"    = "#F0E442",
+                               "tDC"    = "#999999",  # Gray
+                               "mo1"    = "#0072B2",
+                               "mo2"    = "#56B4E9",
+                               "moint"  = "#009E73",
+                               "B"      = "#E41A1C"   # Red
+                             )) {
   
-  # Prepare annotation – ensure it's a data frame with one column
-  # If heatmap_data$annotation_df$cell_types is already a data frame,
-  # we convert it to a one‑column data frame with the desired name.
-  # If it's a vector, we wrap it.
+  # 1. Prepare annotation dataframe
   if (is.data.frame(heatmap_data$annotation_df$cell_types)) {
     annotation_df <- heatmap_data$annotation_df$cell_types
     colnames(annotation_df) <- "Cell Types"
   } else {
     annotation_df <- data.frame(`Cell Types` = heatmap_data$annotation_df$cell_types,
+                                check.names = FALSE,
                                 stringsAsFactors = FALSE)
   }
   
-  # Create column annotation
+  # 2. Map fixed colors to column annotation
   celltype_annotation <- ComplexHeatmap::HeatmapAnnotation(
     df = annotation_df,
+    col = list(`Cell Types` = cell_colors),
     annotation_name_side = "right"
   )
   
-  # Row labels
+  # 3. Set up row labels
   if (!is.null(gene_symbols)) {
     row_labels <- gene_symbols
   } else {
     row_labels <- rownames(heatmap_data$scaled_matrix)
   }
   
-  # Create the heatmap
+  # 4. Define fixed expression color scale (navy -> white -> firebrick3)
+  color_fun <- circlize::colorRamp2(
+    breaks = seq(z_min, z_max, length.out = 100),
+    colors = grDevices::colorRampPalette(c("navy", "white", "firebrick3"))(100)
+  )
+  
+  # 5. Create Heatmap
   ComplexHeatmap::Heatmap(
     matrix = heatmap_data$scaled_matrix,
     top_annotation = celltype_annotation,
@@ -1620,21 +1566,78 @@ generate_heatmap <- function(heatmap_data,
     cluster_columns = TRUE,
     row_names_gp = grid::gpar(fontsize = 8, fontface = "bold"),
     column_names_gp = grid::gpar(fontsize = 6),
-    col = circlize::colorRamp2(
-      seq(-2, 2, length.out = 100), 
-      colorRampPalette(c("navy", "white", "firebrick3"))(100)
-    ),
+    col = color_fun,
     column_title = paste(main_title, "-", heatmap_data$transformation),
     name = "expression",
     border = TRUE,
     heatmap_legend_param = list(
-      title = "expression",
+      title = "Z-score",
+      at = legend_breaks,                   # Locks legend tick locations
+      labels = as.character(legend_breaks), # Consistent tick text
       title_position = "topcenter",
       legend_direction = "horizontal",
       title_gp = grid::gpar(fontsize = 10, fontface = "bold")
     )
   )
 }
+
+# This functions displays a specified gene numbers in a heat map
+
+#generate_heatmap <- function(heatmap_data,
+                             #main_title = "Top 25 cDC1 cells markers",
+                             #gene_symbols = NULL) {
+  
+  # Prepare annotation – ensure it's a data frame with one column
+  # If heatmap_data$annotation_df$cell_types is already a data frame,
+  # we convert it to a one‑column data frame with the desired name.
+  # If it's a vector, we wrap it.
+  #if (is.data.frame(heatmap_data$annotation_df$cell_types)) {
+   # annotation_df <- heatmap_data$annotation_df$cell_types
+   # colnames(annotation_df) <- "Cell Types"
+ # } else {
+  #  annotation_df <- data.frame(`Cell Types` = heatmap_data$annotation_df$cell_types,
+        #                        stringsAsFactors = FALSE)
+ # }
+  
+  # Create column annotation
+ # celltype_annotation <- ComplexHeatmap::HeatmapAnnotation(
+  #  df = annotation_df,
+    #annotation_name_side = "right"
+  #)
+  
+  # Row labels
+  #if (!is.null(gene_symbols)) {
+   # row_labels <- gene_symbols
+ # } else {
+ #   row_labels <- rownames(heatmap_data$scaled_matrix)
+ # }
+  
+  # Create the heatmap
+ # ComplexHeatmap::Heatmap(
+  #  matrix = heatmap_data$scaled_matrix,
+   # top_annotation = celltype_annotation,
+   # row_labels = row_labels,
+   ## show_row_names = TRUE,
+    #show_column_names = FALSE,
+    #cluster_rows = TRUE,
+    #cluster_columns = TRUE,
+   # row_names_gp = grid::gpar(fontsize = 8, fontface = "bold"),
+    #column_names_gp = grid::gpar(fontsize = 6),
+    #col = circlize::colorRamp2(
+     # seq(-2, 2, length.out = 100), 
+     # colorRampPalette(c("navy", "white", "firebrick3"))(100)
+   # ),
+  #  column_title = paste(main_title, "-", heatmap_data$transformation),
+   # name = "expression",
+   # border = TRUE,
+   # heatmap_legend_param = list(
+    #  title = "expression",
+     # title_position = "topcenter",
+     # legend_direction = "horizontal",
+     # title_gp = grid::gpar(fontsize = 10, fontface = "bold")
+   # )
+ # )
+#}
 
 
 
@@ -1813,41 +1816,53 @@ cell_gene_horizontal <- cell_gene_table %>%
 
 cell_gene_horizontal
 
+
+
+
 # format and customise the the pivot wide table 
+
 marker_gene_gt <- cell_gene_horizontal %>%
   gt() %>%
   
   # title of the table 
-  tab_header(
-    title = "Top 25 Marker Genes Identified for Each Cell Type"
-  ) %>%
+  tab_header(title = "Top 25 Marker Genes Identified for Each Cell Type"
+             ) %>%
   
   # rename columns
   cols_label(Cell = "Cell Type",
              Genes = "Top 25 Marker Genes"
              ) %>%
   
-  # align columns
-  cols_align(align = "left",
-             columns = everything()
-             ) %>%
-  
-  # bold cell type names
-  tab_style(style = cell_text(weight = "bold"),
-            locations = cells_body(columns = Cell)
-            ) %>%
-  
-  # header styling
-  tab_style(style = list(cell_fill(color = "grey90"),
-                         cell_text(weight = "bold")
-                         ),
+  # centre and bold the column labels 
+  tab_style(style = cell_text(align = "center",
+                              weight = "bold"
+                              ),
     locations = cells_column_labels()
     ) %>%
   
+  # bold row names
+  tab_style(style = cell_text(weight = "bold",
+                              size = px(20)),
+            locations = cells_body(columns = Cell)
+            ) %>%
+  
+  # column labels
+  tab_style(style = list(cell_fill(color = "grey90"),
+                         cell_text(weight = "bold",
+                                   size = px(20))
+                         ),
+  locations = cells_column_labels()
+  ) %>%
+
+  # increasing body text 
+  tab_style(style = cell_text(size = px(20)),
+            locations = cells_body()
+            ) %>%
+  
   # table options
   tab_options(
-    table.font.size = px(12),
-    data_row.padding = px(6),
+    table.font.size = px(15),
+    data_row.padding = px(12),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
     table_body.hlines.color = "grey80"
@@ -1872,17 +1887,16 @@ intersect(top25_moint_genes$symbol, top25_mo2_genes$symbol)
 
 # again create another list of the top genes from all cell types picking only the top 3 genes from each cell
 # then make a visual table 
-cell_dfs <- list(
-  "cDC1" = top25_cDC1_genes,
-  "cDC2" = top25_cDC2_genes,
-  "DC3"  = top25_DC3_genes,
-  "Bcell" = top25_B_genes,
-  "mo1"  = top25_mo1_genes,
-  "mo2"  = top25_mo2_genes,
-  "moint"  = top25_moint_genes,
-  "pDC" = top25_pDC_genes,
-  "tDC" = top25_tDC_genes
-)
+cell_dfs <- list("cDC1" = top25_cDC1_genes,
+                 "cDC2" = top25_cDC2_genes,
+                 "DC3"  = top25_DC3_genes,
+                 "Bcell" = top25_B_genes,
+                 "mo1"  = top25_mo1_genes,
+                 "mo2"  = top25_mo2_genes,
+                 "moint"  = top25_moint_genes,
+                 "pDC" = top25_pDC_genes,
+                 "tDC" = top25_tDC_genes
+                 )
 
 # pick the top 3 for each cell type and  make a table   
 top3_stats_summary <- lapply(names(cell_dfs), function(name) {
@@ -1892,7 +1906,7 @@ top3_stats_summary <- lapply(names(cell_dfs), function(name) {
     
  # Selecting and renaming for clarity if necessary
     dplyr::select(cell_type, symbol, log2FoldChange, padj)
-}) %>%
+  }) %>%
   bind_rows()
 
 top3_stats_summary
@@ -1916,49 +1930,62 @@ print(formatted_top3)
 
 
 # Create a customised gt table
+# Create a customised gt table
 top3_DEGs_per_celltype <- formatted_top3 %>%
   gt() %>%
   
-  # table title
+  # Table title
   tab_header(
     title = "Top 3 Differentially Expressed Genes Across Myeloid and Lymphoid Subsets"
   ) %>%
   
-  # column alignment
+  # Format table title
+  tab_style(
+    style = cell_text(
+      weight = "bold",
+      size = px(20),
+      align = "center"
+    ),
+    locations = cells_title()
+  ) %>%
+  
+  # Column alignment
   cols_align(
     align = "left",
     columns = everything()
   ) %>%
   
-  # bold first column (cell type)
+  # Bold first column (cell type)
   tab_style(
-    style = cell_text(weight = "bold"),
-    locations = cells_body(
-      columns = 1
-    )
+    style = cell_text(
+      weight = "bold"
+    ),
+    locations = cells_body(columns = 1)
   ) %>%
   
-  # italicize gene names (second column)
+  # Italicize gene names (second column)
   tab_style(
-    style = cell_text(style = "italic"),
-    locations = cells_body(
-      columns = 2
-    )
+    style = cell_text(
+      style = "italic"
+    ),
+    locations = cells_body(columns = 2)
   ) %>%
   
-  # header style
+  # Column header styling
   tab_style(
     style = list(
-      cell_fill(color = "#4E79A7"),
+      cell_fill(color = "#1F4E79"),
       cell_text(
         weight = "bold",
-        color = "white"
+        color = "white",
+        size = px(16),
+        align = "center"
       )
     ),
     locations = cells_column_labels()
   ) %>%
   
-  # add biological row groups
+  # Add biological row groups
   tab_row_group(
     label = "Dendritic Cells",
     rows = 1:9
@@ -1974,23 +2001,36 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
     rows = 13:21
   ) %>%
   
-  # table formatting options
+  # Style biological row labels
+  tab_style(
+    style = list(
+      cell_fill(color = "lightblue"),
+      cell_text(
+        weight = "bold",
+        size = px(16),
+        color = "black"
+      )
+    ),
+    locations = cells_row_groups()
+  ) %>%
+  
+  # Table formatting options
   tab_options(
     table.font.size = px(15),
     data_row.padding = px(5),
-    table.width = pct(90),
+    table.width = pct(60),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
     table_body.hlines.color = "grey80",
-    heading.title.font.size = px(16),
+    heading.title.font.size = px(20),
     heading.title.font.weight = "bold"
   ) %>%
   
-  # alternate row shading
+  # Alternate row shading
   opt_row_striping()
 
 
-# display table
+# Display table
 top3_DEGs_per_celltype
 
 # save the table 
@@ -2101,11 +2141,14 @@ b_cell_heatmap <- generate_heatmap(heatmap_data = heatmap_data_B,
                                  main_title = "Top B cell markers",
                                  gene_symbols = heatmap_data_B$top_genes$symbol
                                  )
+
+b_cell_heatmap
 # cDC1 heat map 
 cDC1_heatmap <- generate_heatmap(heatmap_data = heatmap_data_cDC1,
                                  main_title = "Top cDC1 markers",
                                  gene_symbols = heatmap_data_cDC1$top_genes$symbol
                                  )
+cDC1_heatmap
 # cDC2 heat map 
 cDC2_heatmap <- generate_heatmap(heatmap_data = heatmap_data_cDC2,
                                  main_title = "Top cDC2 markers",
