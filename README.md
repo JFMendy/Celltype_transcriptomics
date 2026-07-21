@@ -18,7 +18,7 @@ This repository also included computational analysis R scripts used for these an
 - Also both datasets are not tracked by git.  
   
 ### How to access the used data for this analysis
-Due to the large scRNA-seq file, both files were stored in Zenodo. And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**". When the files are downloaded, "**se.rds**"  => ***bulk RNA-seq SummerisedExperiment object*** and "**hsobj_20221209_annotated.rds**" => ***scRNA-seq Seurat object***. The subfolders of this files should be placed in the "**data**" folder in repository. 
+Due to the large scRNA-seq file, both files were stored in Zenodo. And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**". When the files are downloaded, "se.rds"  => bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => scRNA-seq Seurat object. The subfolders of this files should be placed in the "data" folder in repository. 
 
 ### File paths: 
 Following the downloads, file paths would be: 
@@ -40,8 +40,8 @@ R would automatically install required exact versions of packages and their depe
 
 ### Running the analyses: 
 The analyses are structured sequencially. To recreate these analyses, the scripts should run as indicated below. 
-- The seurat object is large **(7GB)** hence, would need a large memeory (RAM) to load the data.
-- Note, first run the "**bulk_rscript.R**" then the "**scrna_script.R**"
+- The seurat object is large (7GB) hence, would need a large memeory (RAM) to load the data.
+- Note, first run the "bulk_rscript.R" then the "scrna_script.R"
 - Each script also contain custom helper functions to perform repetitive analyses.
 
 ## Ouput Files 
