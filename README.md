@@ -60,7 +60,7 @@ Note: some generated output files are intermediate objects required especially f
 - Git and Git Hub
 
 **Packages and description**
--Bioconductor packages were also managed through **BiocManager** as well renv.lock file
+- Bioconductor packages were also managed through **BiocManager** as well renv.lock file
 
 ***reproducibility***
 - __renv:__ Manages the project-specific R environment and package versions
