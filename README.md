@@ -24,8 +24,8 @@ Due to the large scRNA-seq file, both files were stored in Zenodo. And could be 
 Following the downloads, file paths would be: 
 - se.rds => data/bulkRNASeq/se.rds  
 - hsobj_20221209_annotated.rds => data/scRNASeq/hsobj_20221209_annotated.rds
-- bulk RNA-seq analysis source code => codes/bulk_rscript.R
-- Single-cell RNA-seq analysis => codes/scrna_rscript.R
+- ***bulk RNA-seq*** analysis source code => codes/bulk_rscript.R
+- ***Single-cell RNA-seq*** analysis => codes/scrna_rscript.R
 
 ### R environment setup:
 A renv was was set up for analyses reproduciblity and package management. 
@@ -62,35 +62,35 @@ Note: some generated output files are intermediate objects required especially f
 **Packages and description**
 Bioconductor packages were also managed through **BiocManager** as well renv.lock file
 ***reproducibility***
-__renv:__ Manages the project-specific R environment and package versions
+- __renv:__ Manages the project-specific R environment and package versions
 
 ***Bulk RNA-seq Analysis***
-__SummarizedExperiment:__ stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis
-__DESeq2:__ perform the differential gene expression in bulk RNA-seq data
-__biomaRt:__ retrieves gene annotations from Ensembl online database
+- __SummarizedExperiment:__ stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis
+- __DESeq2:__ perform the differential gene expression in bulk RNA-seq data
+- __biomaRt:__ retrieves gene annotations from Ensembl online database
 
 **Single-cell Analysis**
-__Seurat:__ Stores and manages single-cell data, metadata and analysis results and visulisations
-__presto:__ used to calculate single-cell gene expression analysis
+- __Seurat:__ Stores and manages single-cell data, metadata and analysis results and visulisations
+- __presto:__ used to calculate single-cell gene expression analysis
 
 ***Data Manipulation**
-__tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformation or wrangling
+- __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformation or wrangling
 
 ***Visualisation***
-__ggplot2:__ used to generate graphics for visualisation
-__patchwork:__ combines many plots into a single layout
-__complexHeatmap:__ used to customised the heatmap for gene expression analysis
-__circlize:__ provides colour mapping and annotation for ComplexHeatmap
-__factoextra:__ used to visulaise principal component analysis (PCA) results and other multivariate analyses
-__ggrepel:__ used for adding text labels in plots
-__viridis:__ used to provides plot colours
-__scales:__ used for formatting axesand scaling of colours for plots
-__grid:__ provide graphic functions for plots
-__gridExtra:__ manages multiple plots
+- __ggplot2:__ used to generate graphics for visualisation
+- __patchwork:__ combines many plots into a single layout
+- __complexHeatmap:__ used to customised the heatmap for gene expression analysis
+- __circlize:__ provides colour mapping and annotation for ComplexHeatmap
+- __factoextra:__ used to visulaise principal component analysis (PCA) results and other multivariate analyses
+- __ggrepel:__ used for adding text labels in plots
+- __viridis:__ used to provides plot colours
+- __scales:__ used for formatting axesand scaling of colours for plots
+- __grid:__ provide graphic functions for plots
+- __gridExtra:__ manages multiple plots
 
 ***Tables***
-__gt:__ used to generate summary tables
-__kableExtra:__ enehance the summary table in HTML and pdfs
-__knitr:__ used for generating reports
+- __gt:__ used to generate summary tables
+- __kableExtra:__ enehance the summary table in HTML and pdfs
+- __knitr:__ used for generating reports
 
 
