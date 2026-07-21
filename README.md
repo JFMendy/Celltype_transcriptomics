@@ -1,4 +1,4 @@
-# Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
+## Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
 > **Master of Science (MSc) Thesis Analysis**  
 > **Author:** Joseph F Mendy  
 > **Contact:** joseph.mendy@stud.th-deg.de
@@ -44,14 +44,14 @@ The analyses are structured sequencially. To recreate these analyses, the script
 - Note, first run the "bulk_rscript.R" then the "scrna_script.R"
 - Each script also contain custom helper functions to perform repetitive analyses.
 
-## Ouput Files 
+### Ouput Files 
 During the running of the source codes, each script automatically generate's figures, tables and diffferential expression results. The generated plots and tables are stored as indicalted. 
 - The bulk script would store its output in  => **plots/bulk_plot/**
 - While the single-cell script => **plots/scrna_plot/**
 
 Note: some generated output files are intermediate objects required especially for single-cell analysis comaparsion may to be stored in the repository but remain as output in the R global environment. 
 
-## Software requirement
+### Software requirement
 - R Version: 4.4.3
 - Rstudio version:
 - CRAN packages
@@ -63,7 +63,7 @@ Note: some generated output files are intermediate objects required especially f
 Bioconductor packages were also managed through **BiocManager** as well renv.lock file
 
 ***reproducibility***
-- __renv:__ Manages the project-specific R environment and package versions
+ __renv:__ Manages the project-specific R environment and package versions
 
 ***Bulk RNA-seq Analysis***
 - __SummarizedExperiment:__ stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis
@@ -75,7 +75,7 @@ Bioconductor packages were also managed through **BiocManager** as well renv.loc
 - __presto:__ used to calculate single-cell gene expression analysis
 
 ***Data Manipulation***
-- __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformation or wrangling
+__tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformation or wrangling
 
 ***Visualisation***
 - __ggplot2:__ used to generate graphics for visualisation
