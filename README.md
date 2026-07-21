@@ -45,18 +45,10 @@ The analyses are structured sequencially. To recreate these analyses, the script
 - Each script also contain custom helper functions to perform repetitive analyses.
 
 ## Ouput Files 
-During the running of the source codes, each script automatically generate's figures, tables and diffferential expression results. The generated plots are stored as indicalted. 
+During the running of the source codes, each script automatically generate's figures, tables and diffferential expression results. The generated plots and tables are stored as indicalted. 
 - The bulk script would store its output in  => plots/bulk_plot/
 - While the single-cell script => plots/scrna_plot/
-- The plots produced include:
--- PCA plots
-  UMAP plots
-  Heatmaps
-  Volcano plots
-  Violin plots
-  Feature plots
-  Marker gene tables
-  Differential expression tables
+
 Note: some generated output files are intermediate objects required especially for single-cell analysis comaparsion may to be stored in the repository but remain as output in the R global environment. 
 
 ## Software requirement
