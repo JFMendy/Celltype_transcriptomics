@@ -59,8 +59,8 @@ Note: some generated output files are intermediate objects required especially f
 - renv for dependency management
 - Git and Git Hub
 
-**Packages and description**
-- Bioconductor packages were also managed through **BiocManager** as well renv.lock file
+### Packages and description
+Bioconductor packages were also managed through **BiocManager** as well renv.lock file
 
 ***reproducibility***
 - __renv:__ Manages the project-specific R environment and package versions
@@ -74,7 +74,7 @@ Note: some generated output files are intermediate objects required especially f
 - __Seurat:__ Stores and manages single-cell data, metadata and analysis results and visulisations
 - __presto:__ used to calculate single-cell gene expression analysis
 
-***Data Manipulation**
+***Data Manipulation***
 - __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformation or wrangling
 
 ***Visualisation***
