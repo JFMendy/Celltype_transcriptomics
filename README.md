@@ -59,33 +59,46 @@ During the running of the source codes, each script automatically generate's fig
   Differential expression tables
 Note: some generated output files are intermediate objects required especially for single-cell analysis comaparsion may to be stored in the repository but remain as output in the R global environment. 
 
+## Software requirement
+- **R Version:** 4.4.3
+- **Rstudio version:**
+- **CRAN packages**
+- **Bioconductor packages**
+- **renv** for dependency management
+- **Git and Git Hub**
 
+**Packages and description**
+Bioconductor packages were also managed through **BiocManager** as well renv.lock file
+***reproducibility***
+__renv:__ Manages the project-specific R environment and package versions
 
-
-## Software requirement w
-**R Version:** 4.4.3
-**Rstudio version:**
-**Git and Git Hub**
-
-**Bulk RNA-seq Analysis**
-- bioconductor 
-- DESeq2: perform the differential gene expression in bulk RNA-seq data   
-- SummarizedExperiment: stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis 
-- biomaRt: retrieves gene annotations from Ensembl online database
-- complexHeatmap: used to customised the heatmap for gene expression analysis
+***Bulk RNA-seq Analysis***
+__SummarizedExperiment:__ stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis
+__DESeq2:__ perform the differential gene expression in bulk RNA-seq data
+__biomaRt:__ retrieves gene annotations from Ensembl online database
 
 **Single-cell Analysis**
-- Seurat: is a tool that stores and manages single-cell data, metadata and analysis results and visulisations
-- presto
+__Seurat:__ Stores and manages single-cell data, metadata and analysis results and visulisations
+__presto:__ used to calculate single-cell gene expression analysis
 
-**Visualisation**
-- ggplot2: used to generate graphics for visualisation 
-- tidyverse (dplyr, tidyr and tibble): used for data manipulation, transformation or wrangling 
-- patchwork: combines many plots into a single layout. 
-- gt: used to generate summary tables 
-- kableExtra : enehance the summary table in HTML and pdfs 
-- viridis: provides the customised plot colours 
-- gridExtra : arranges multiple graphical objects in a single figure
+***Data Manipulation**
+__tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformation or wrangling
 
-- EnhancedVolcano: creates volcano plots for differential gene expressions 
-  
+***Visualisation***
+__ggplot2:__ used to generate graphics for visualisation
+__patchwork:__ combines many plots into a single layout
+__complexHeatmap:__ used to customised the heatmap for gene expression analysis
+__circlize:__ provides colour mapping and annotation for ComplexHeatmap
+__factoextra:__ used to visulaise principal component analysis (PCA) results and other multivariate analyses
+__ggrepel:__ used for adding text labels in plots
+__viridis:__ used to provides plot colours
+__scales:__ used for formatting axesand scaling of colours for plots
+__grid:__ provide graphic functions for plots
+__gridExtra:__ manages multiple plots
+
+***Tables***
+__gt:__ used to generate summary tables
+__kableExtra:__ enehance the summary table in HTML and pdfs
+__knitr:__ used for generating reports
+
+
