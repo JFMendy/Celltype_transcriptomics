@@ -955,7 +955,7 @@ styled_table
 # the statistics performance 
 gtsave(
   styled_table,
-  filename = "plots/scrna_plot/cDC1_marker_statistics.png"
+  filename = "plots/scrna_plot/cDC1_marker_statistics.pdf"
   )
 
 

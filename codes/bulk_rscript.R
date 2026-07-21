@@ -1506,6 +1506,102 @@ top_genes_fn <- function(df_hd_data, top_n = Inf, min_comparisons = 1) {
 
 
 
+
+
+
+
+# This function process and return data that can be used to generate a heat map
+create_heatmap_data <- function(dds_pairwise, 
+                                top_genes_df, 
+                                metadata_cols = "cell_types", 
+                                use_vst = TRUE) {
+  
+  
+  # check that metadata columns exist
+  
+  missing_cols <- setdiff(metadata_cols, colnames(colData(dds_pairwise)))
+  if(length(missing_cols) > 0) {
+    stop("These metadata columns are missing in colData(dds_pairwise): ", 
+         paste(missing_cols, collapse=", "))
+  }
+  
+  
+  # check that genes exist in the assay
+  
+  missing_genes <- setdiff(top_genes_df$gene_id, rownames(dds_pairwise))
+  if(length(missing_genes) > 0) {
+    warning("Some genes in top_genes_df are not found in the assay: ", 
+            paste(missing_genes, collapse=", "))
+  }
+  
+  # Keep only genes that exist
+  valid_genes <- intersect(top_genes_df$gene_id, rownames(dds_pairwise))
+  if(length(valid_genes) == 0) {
+    stop("No valid genes found in the assay. Cannot generate heatmap data.")
+  }
+  
+  
+  # transform counts
+  
+  if(use_vst) {
+    message("Using VST transformation (faster for large datasets)")
+    vsd <- vst(dds_pairwise, blind = FALSE)
+  } else {
+    message("Using rlog transformation (better for small datasets)")
+    vsd <- rlog(dds_pairwise, blind = FALSE)
+  }
+  
+  
+  # extract expression matrix for top genes
+  
+  mat <- assay(vsd)[valid_genes, , drop = FALSE]
+  
+  # Scale by row (z-score)
+  mat_scaled <- t(scale(t(mat)))
+  
+  
+  #  prepare sample annotations
+  
+  annotation_df <- as.data.frame(colData(dds_pairwise)[, metadata_cols, drop = FALSE])
+  
+  # ensure rownames match colnames of matrix
+  rownames(annotation_df) <- colnames(mat_scaled)
+  
+  
+  # return all components in a list
+  
+  return(list(
+    scaled_matrix = mat_scaled,      # Scaled expression matrix (z-score)
+    annotation_df = annotation_df,   # Sample metadata
+    top_genes = top_genes_df,        # Original top genes dataframe
+    transformation = ifelse(use_vst, "vst", "rlog")  # Transformation method used
+  ))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Heatmap generator with unified expression scaling and fixed cell-type palette
 generate_heatmap <- function(heatmap_data,
                              main_title = "Top 25 cDC1 cells markers",
@@ -1554,6 +1650,10 @@ generate_heatmap <- function(heatmap_data,
     breaks = seq(z_min, z_max, length.out = 100),
     colors = grDevices::colorRampPalette(c("navy", "white", "firebrick3"))(100)
   )
+  
+  
+  
+  
   
   # 5. Create Heatmap
   ComplexHeatmap::Heatmap(
@@ -1750,7 +1850,7 @@ gt_tbl_pub
 # save the plot 
 gtsave(
   gt_tbl_pub,
-  "plots/bulk_plot/table_up_down_regulated_genes.png"
+  "plots/bulk_plot/table_up_down_regulated_genes.pdf"
 )
 
 # call higher function to get higher (up-regulated) genes per cell 
@@ -1842,20 +1942,20 @@ marker_gene_gt <- cell_gene_horizontal %>%
   
   # bold row names
   tab_style(style = cell_text(weight = "bold",
-                              size = px(20)),
+                              size = px(18)),
             locations = cells_body(columns = Cell)
             ) %>%
   
   # column labels
   tab_style(style = list(cell_fill(color = "grey90"),
                          cell_text(weight = "bold",
-                                   size = px(20))
+                                   size = px(18))
                          ),
   locations = cells_column_labels()
   ) %>%
 
   # increasing body text 
-  tab_style(style = cell_text(size = px(20)),
+  tab_style(style = cell_text(size = px(15)),
             locations = cells_body()
             ) %>%
   
@@ -1877,7 +1977,7 @@ marker_gene_gt
 # then save the table for the top markers 
 gtsave(
   marker_gene_gt,
-  filename = "plots/bulk_plot/top25_marker_genes_table.png"
+  filename = "plots/bulk_plot/top25_marker_genes_table.pdf"
 )
 
 
@@ -1943,7 +2043,7 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
   tab_style(
     style = cell_text(
       weight = "bold",
-      size = px(20),
+      size = px(14),
       align = "center"
     ),
     locations = cells_title()
@@ -1978,7 +2078,7 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
       cell_text(
         weight = "bold",
         color = "white",
-        size = px(16),
+        size = px(12),
         align = "center"
       )
     ),
@@ -2007,7 +2107,7 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
       cell_fill(color = "lightblue"),
       cell_text(
         weight = "bold",
-        size = px(16),
+        size = px(12),
         color = "black"
       )
     ),
@@ -2016,13 +2116,13 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
   
   # Table formatting options
   tab_options(
-    table.font.size = px(15),
+    table.font.size = px(12),
     data_row.padding = px(5),
     table.width = pct(60),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
     table_body.hlines.color = "grey80",
-    heading.title.font.size = px(20),
+    heading.title.font.size = px(14),
     heading.title.font.weight = "bold"
   ) %>%
   
@@ -2036,7 +2136,7 @@ top3_DEGs_per_celltype
 # save the table 
 gtsave(
   top3_DEGs_per_celltype,
-  filename = "plots/bulk_plot/top3_DEGs_per_celltype.png",)
+  filename = "plots/bulk_plot/top3_DEGs_per_celltype.pdf",)
 
 
 
@@ -2126,7 +2226,7 @@ heatmap_data_moint <- create_heatmap_data(dds_pairwise = dds_pairwise,
 
 
 # seed to allow exact same data reproduced 
-set.seed(123)
+#set.seed(123)
 
 # global (combine cell type) heatmap 
 heatmap_plot <- generate_heatmap(heatmap_data = heatmap_data,
