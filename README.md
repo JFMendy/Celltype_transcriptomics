@@ -62,29 +62,30 @@ Note: some generated output files are intermediate objects required especially f
 
 
 
-## Software requirement 
+## Software requirement w
 **R Version:** 4.4.3
 **Rstudio version:**
 **Git and Git Hub**
 
 **Bulk RNA-seq Analysis**
 - bioconductor 
-- DESeq2
-- SummarizedExperiment
-- biomaRt
+- DESeq2: perform the differential gene expression in bulk RNA-seq data   
+- SummarizedExperiment: stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis 
+- biomaRt: retrieves gene annotations from Ensembl online database
+- complexHeatmap: used to customised the heatmap for gene expression analysis
 
 **Single-cell Analysis**
-- Seurat
+- Seurat: is a tool that stores and manages single-cell data, metadata and analysis results and visulisations
 - presto
 
 **Visualisation**
-- ggplot2
-- tidyverse
-- ComplexHeatmap
-- patchwork
-- gt
-- kableExtra
-- viridis
+- ggplot2: used to generate graphics for visualisation 
+- tidyverse (dplyr, tidyr and tibble): used for data manipulation, transformation or wrangling 
+- patchwork: combines many plots into a single layout. 
+- gt: used to generate summary tables 
+- kableExtra : enehance the summary table in HTML and pdfs 
+- viridis: provides the customised plot colours 
+- gridExtra : arranges multiple graphical objects in a single figure
 
-- 
+- EnhancedVolcano: creates volcano plots for differential gene expressions 
   
