@@ -59,11 +59,12 @@ Note: some generated output files are intermediate objects required especially f
 - renv for dependency management
 - Git and Git Hub
 
-### Packages and description
+### Packages description and dependencies 
 
-Bioconductor packages were also managed through **BiocManager** as well renv.lock file.
-The following packages require dependencies: 
-gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected
+The packages were obtained from CRAN and Bioconductor. The Bioconductor packages were also managed through **BiocManager** as well renv.lock file.
+***Dependencies:*** 
+The following packages require dependencies as indicated by the arrow: 
+gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected. Then run these two codes to get it running as expected. 
 - __renv::install(c("gt",
 "webshot2",
 "chromote",
@@ -74,8 +75,7 @@ gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => 
 
 
 ***reproducibility***
-
- __renv:__ Manages the project-specific R environment and package versions
+- __renv:__ Manages the project-specific R environment and package versions
 
 ***Bulk RNA-seq Analysis***
 - __SummarizedExperiment:__ stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis
