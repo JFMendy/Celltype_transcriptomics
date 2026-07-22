@@ -49,7 +49,7 @@ During the running of the source codes, each script automatically generate's fig
 - The bulk script would store its output in  => **plots/bulk_plot/**
 - While the single-cell script => **plots/scrna_plot/**
 
-Note: some generated output files are intermediate objects required especially for single-cell analysis comaparsion may to be stored in the repository but remain as output in the R global environment. 
+**Note:** There is a generated output intermediate object by bulk RNA-seq source code required to compare single-cell analysis results against bulk RNA-seq result. This intermediate object is stored in the R global environment, hence the need to run the bulk RNA-seq source code first otherwise, the single-cell would generate an error during the course of running. 
 
 ### Software requirement
 - R Version: 4.4.3
