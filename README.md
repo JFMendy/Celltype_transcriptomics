@@ -69,8 +69,8 @@ gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => 
 "chromote",
 "websocket",
 "AsioHeaders"
-))
-renv::snapshot()__
+))__
+- __renv::snapshot()__
 
 
 ***reproducibility***
