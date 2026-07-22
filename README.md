@@ -33,8 +33,8 @@ To recreate these analyses:
 - use this code and link: ***git clone https://github.com/USERNAME/MSc_thesis_analysis.git***
 - open the ***MSc_thesis_analysis.Rproj***
 - Run the following codes on the R console:
-  - ***install.packages("renv")***
-  - ***renv::restore()***.
+  -***install.packages("renv")***
+  -***renv::restore()***.
     
 R would automatically install required exact versions of packages and their dependencies used in this project stored in the renv.lock file.
 
@@ -65,13 +65,13 @@ The packages were obtained from CRAN and Bioconductor. The Bioconductor packages
 - ***Dependencies:*** 
 The following packages require dependencies as indicated by the arrow: 
 gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected. Then run these two codes to get it running as expected. 
-- __renv::install(c("gt",
+-- __renv::install(c("gt",
 "webshot2",
 "chromote",
 "websocket",
 "AsioHeaders"
 ))__
-- __renv::snapshot()__
+-- __renv::snapshot()__
 
 
 ***reproducibility***
