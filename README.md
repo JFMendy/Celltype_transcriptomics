@@ -60,7 +60,17 @@ Note: some generated output files are intermediate objects required especially f
 - Git and Git Hub
 
 ### Packages and description
-Bioconductor packages were also managed through **BiocManager** as well renv.lock file
+
+Bioconductor packages were also managed through **BiocManager** as well renv.lock file.
+The following packages require dependencies: 
+gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected
+__renv::install(c("gt",
+"webshot2",
+"chromote",
+"websocket",
+"AsioHeaders"
+))
+renv::snapshot()__
 
 ***reproducibility***
  __renv:__ Manages the project-specific R environment and package versions
