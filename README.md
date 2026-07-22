@@ -65,13 +65,13 @@ The packages were obtained from CRAN and Bioconductor. The Bioconductor packages
 - ***Dependencies:*** 
 The following packages require dependencies as indicated by the arrow: 
 gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected. Then run these two codes to get it running as expected.
- - __renv::install(c("gt",
+   - __renv::install(c("gt",
 "webshot2",
 "chromote",
 "websocket",
 "AsioHeaders"
 ))__
- - __renv::snapshot()__
+   - __renv::snapshot()__
 
 
 ***reproducibility***
