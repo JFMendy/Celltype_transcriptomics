@@ -30,7 +30,7 @@ Following the downloads, file paths would be:
 ### R environment setup:
 A renv was was set up for analyses reproduciblity and package management. 
 To recreate these analyses: 
-- use this code and link: ***git clone https://github.com/USERNAME/MSc_thesis_analysis.git***
+- use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/edit/main/README.md***
 - open the ***MSc_thesis_analysis.Rproj***
 - Run the following codes on the R console:
   -***install.packages("renv")***
