@@ -16,12 +16,18 @@
   library(scales)
   library(ComplexHeatmap)
   library(patchwork)
+  library(circlize)
+  library(UpSetR)
+  library(grid)
+
+  
   }
 
 # 0.2 read in the data ===================================================================================================================================
 ## read in the bulk RNA-seq data 
 
 mydata_bulk_RNA <- readRDS("data/bulkRNASeq/se.rds")
+
 
 
 
@@ -35,7 +41,7 @@ mydata_bulk_RNA <- readRDS("data/bulkRNASeq/se.rds")
 ## 1.1 make a copy of original data---- 
 mydata_bulk_RNA2 <- mydata_bulk_RNA
 
-
+rm(mydata_bulk_RNA)
 
 ## 1.2 Inspect the SummerisedExperiemnt structure --------------------------------------------------------------------------------------------------------
 
@@ -47,10 +53,10 @@ names(colData(mydata_bulk_RNA2))
 names(rowData(mydata_bulk_RNA2))
 
 # check the column names  
-colData(mydata_bulk_RNA)
+colData(mydata_bulk_RNA2)
 
 # check the row names 
-rowData(mydata_bulk_RNA)   
+rowData(mydata_bulk_RNA2)   
 
 # show top 6 rows 
 head(colData(mydata_bulk_RNA2)) 
@@ -64,7 +70,8 @@ glimpse(mydata_bulk_RNA2)
 # detail structure of the data file 
 str(mydata_bulk_RNA2)
 
-
+#assy names
+assayNames(mydata_bulk_RNA2)
 
 
 
@@ -72,7 +79,7 @@ str(mydata_bulk_RNA2)
 
 # check the sample information 
 colData(mydata_bulk_RNA2)
-
+rowData(mydata_bulk_RNA2)
 # remove  columns of no interest 
 colData(mydata_bulk_RNA2)$...7 <- NULL
 colData(mydata_bulk_RNA2)$We.have.4.donors..Donor.252..253..254..255 <- NULL
@@ -83,7 +90,7 @@ any(duplicated(rowData(mydata_bulk_RNA2)$id))
 # extract the duplicates and view the duplicates and view 
 duplicates <- (rowData(mydata_bulk_RNA2)$id[duplicated(rowData(mydata_bulk_RNA2)$id)])  
 duplicates 
-
+rm(duplicates)
 # remove the duplicate
 mydata_bulk_RNA2 <- mydata_bulk_RNA2[!duplicated(rowData(mydata_bulk_RNA2)$id), ]
 
@@ -107,6 +114,7 @@ mydata_bulk_RNA2 <- mydata_bulk_RNA2[
 # extract the genes counts 
 counts <- assay(mydata_bulk_RNA2, "counts")
 
+
 # remove genes with less than 10 row sum count and sample less than 3 
 keep <- rowSums(counts >= 10) >= 3
 mydata_bulk_RNA2 <- mydata_bulk_RNA2[keep, ]
@@ -116,7 +124,7 @@ all(colnames(assay(mydata_bulk_RNA2, "counts")) ==
       rownames(colData(mydata_bulk_RNA2)))
 
 
-
+rm(keep)
 
 
 # 3 exploratory analysis and visualisation =====================================================================================================================
@@ -224,48 +232,54 @@ sample_demo_table_plot2 <- gridExtra::arrangeGrob(sample_demo_table)
 # add a column called total_gene_count 
 
 
-# calculate the total genes per sample and save it in a column total_gene_counts 
-meta$total_gene_counts <- colSums(counts)    
+# calculate the total read per sample and save it in a column total_gene_counts 
+meta$total_read_counts <- colSums(counts)    
 
 #create a table with column names: sampleName, cell type, total counts
-gene_count_per_sample <- meta %>%
+read_per_sample <- meta %>%
   
   # needed columns 
-  dplyr::select(sampleName, Cell.population, total_gene_counts) %>% 
+  dplyr::select(sampleName, Cell.population, total_read_counts) %>% 
   
-  # order base on  total_gene_counts
-  dplyr::arrange(Cell.population, total_gene_counts) %>%  
+  # order base on  total_read_counts
+  dplyr::arrange(Cell.population,total_read_counts) %>%  
   
   # create new column name for sample
   dplyr::mutate(sampleName = factor(sampleName, levels = sampleName))   
 
 # preview the table 
-head(gene_count_per_sample)
+head(read_per_sample)
 
 
 # remove any missing value or NAs
 # prepare the data for plotting 
-gene_count_clean <- gene_count_per_sample %>%
-  filter(!is.na(total_gene_counts) & !is.na(Cell.population))
+read_clean <- read_per_sample %>%
+  filter(!is.na(total_read_counts) & !is.na(Cell.population))
+
+
+
+
 
 # generate a plot for the gene count per sample 
-gene_count_plot <- ggplot(gene_count_clean, 
+read_plot <- ggplot(read_clean, 
        aes(x = sampleName, 
-           y = total_gene_counts, 
+           y = total_read_counts, 
            color = Cell.population)) +
   
   # lollipop plot sticks
-  geom_segment(aes(xend = sampleName, y = 0, yend = total_gene_counts),
+  geom_segment(aes(xend = sampleName, 
+                   y = 0,
+                   yend = total_read_counts),
                linewidth = 1.2) +
   
   # lollipop plot heads
-  geom_point(size = 3) +
+  geom_point(size = 4) +
   
   # titles and axis labels
   labs(
-    title = "Gene Counts per Sample per Cell Type",
+    title = "read counts per Cell Type",
     x = "Sample ID",
-    y = "Total Gene Counts per Sample",
+    y = "Total read counts per Sample",
     color = "Cell Population"
   ) +
   
@@ -283,38 +297,54 @@ gene_count_plot <- ggplot(gene_count_clean,
   # select theme: subtle grids, boxed axes
   theme_bw() +
   theme(
-    plot.title = element_text(hjust = 0.5, size = 25, face = "bold"),
+    plot.title = element_text(hjust = 0.5, 
+                              size = 25, 
+                              face = "bold"),
     
     # text size and direction 
-    axis.title = element_text(size = 20, face = "bold"),
-    axis.text.y = element_text(size = 15, face = "bold"),
-    axis.text.x = element_text(angle = 90, hjust = 1, size = 10),
+    axis.title = element_text(size = 20, 
+                              face = "bold"),
+    
+    axis.text.y = element_text(size = 15, 
+                               face = "bold"),
+    
+    axis.text.x = element_text(angle = 90, 
+                               hjust = 1, 
+                               size = 10),
     
     # subtle grid lines
-    panel.grid.major = element_line(color = "gray85", linewidth = 0.3),
-    panel.grid.minor = element_line(color = "gray90", linewidth = 0.15),
+    panel.grid.major = element_line(color = "gray85",
+                                    linewidth = 0.3),
+    
+    panel.grid.minor = element_line(color = "gray90", 
+                                    linewidth = 0.15),
     
     # boxed axes
-    axis.line = element_line(color = "black", linewidth = 1),
+    axis.line = element_line(color = "black", 
+                             linewidth = 1),
     
     # legend styling
     legend.position = "right",
-    legend.title = element_text(size = 15, face = "bold"),
-    legend.text = element_text(size = 12, face = "bold"),
-    legend.key = element_rect(fill = "white", color = "black"),
+    legend.title = element_text(size = 15, 
+                                face = "bold"),
+    
+    legend.text = element_text(size = 12,
+                               face = "bold"),
+    
+    legend.key = element_rect(fill = "white", 
+                              color = "black"),
+    
     legend.key.size = unit(0.6, "cm"),
     legend.spacing.y = unit(0.3, "cm")
   ) +
   
   # customise the legend symbols
-  guides(
-    color = guide_legend(
-      override.aes = list(size = 4),  # bigger legend points
+  guides(color = guide_legend(override.aes = list(size = 4),  # bigger legend points
       ncol = 1                        # number of columns
     )
   )
 
-gene_count_plot
+read_plot
 
 
 # arrange lollipop plot in ascending order 
@@ -460,7 +490,6 @@ df_detected_qc_metrics_plot
 
 
 
-
 ## 3.2 call the saving function:-------------------------------------------------------------------------------------------------------
  
 # call the save_plot_with_ggsave function 
@@ -475,10 +504,10 @@ save_plot_with_ggsave(
 
 # save the gene count table 
 save_plot_with_ggsave(
-  plot_obj = gene_count_plot,
-  filename = "gene_count_plot.pdf",
-  width = 25,
-  height = 15
+  plot_obj = read_plot,
+  filename = "Read_count_plot.pdf",
+  width = 40,
+  height = 20
   )
 
 
@@ -686,7 +715,6 @@ names(colData(mydata_bulk_RNA2))
 names(rowData(mydata_bulk_RNA2))
 
 
-
 # 5.1 Data wrangling ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # Rename the 'Cell.population' column to 'cell_types'
@@ -699,24 +727,30 @@ mydata_bulk_RNA2$cell_types <- factor(mydata_bulk_RNA2$cell_types)
 levels(colData(mydata_bulk_RNA2)$cell_types)
 
 # design and build DESeqDataSet object 
-dds_pairwise <- DESeqDataSet(mydata_bulk_RNA2, 
+dds <- DESeqDataSet(mydata_bulk_RNA2, 
                              design = ~ Patient + cell_types)
 
+
+# check experimental design 
+design(dds)
+
+
+dim(dds)
 # drop PBMCs from the downstream analysis 
-dds_pairwise <- dds_pairwise[, colData(dds_pairwise)$cell_types != "PBMC"]
+dds <- dds[, colData(dds)$cell_types != "PBMC"]
 
 # drop the unused levels if it still there 
-colData(dds_pairwise) <- droplevels(colData(dds_pairwise))
-levels(colData(dds_pairwise)$cell_types)
+colData(dds) <- droplevels(colData(dds))
+levels(colData(dds)$cell_types)
 
 
 # filter out total genes count less 10 per row
-dds_pairwise <- dds_pairwise[rowSums(counts(dds_pairwise)) >= 10, ]
+dds <- dds[rowSums(counts(dds)) >= 10, ]
 
 
 # remove the NAs from the data 
 # extract the rownames (genes) from dds_pairwise
-ensembl_ids <- rownames(dds_pairwise)
+ensembl_ids <- rownames(dds)
 
 # clean IDs ( remove any addition to name, strip suffix off)
 ensembl_ids_clean <- sub("\\.\\d+$", "", ensembl_ids)
@@ -759,7 +793,7 @@ biotype_lookup <- setNames(annot_clean$gene_biotype,
 matched_genes <- ensembl_ids_clean %in% names(symbol_lookup)
 
 # subset the latest inform from dds object previously built 
-dds_obj <- dds_pairwise[matched_genes, ]
+dds_obj <- dds[matched_genes, ]
 
 # add annotations
 rowData(dds_obj)$hgnc_symbol <- symbol_lookup[ensembl_ids_clean[matched_genes]]
@@ -767,16 +801,599 @@ rowData(dds_obj)$hgnc_symbol <- symbol_lookup[ensembl_ids_clean[matched_genes]]
 rowData(dds_obj)$gene_biotype <- biotype_lookup[ensembl_ids_clean[matched_genes]]
 rowData(dds_obj)
 
+nrow(dds_obj)
+
+# sample information after filtering 
+dds_obj
+
+### 5.2 further quality control assessment before DESeq2 ============================================================================================================================== 
+#library  size check 
 
 
-# 5.2  run DESeq2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+library_df <- data.frame(Sample = colnames(dds_obj),
+                         Library_Size = colSums(counts(dds_obj))/1e6,
+                         Condition = dds_obj$sampleName
+                         )
+
+head(library_df)
+
+# check for outliers  
+summary(library_df$Library_Size)
+
+
+# check a box plot to identify outliers 
+
+ggplot(library_df, aes(y = Library_Size)) +
+  geom_boxplot() +
+  theme_classic()
+
+
+
+
+# calculate the outliers 
+Q1 <- quantile(library_df$Library_Size, 0.25)
+Q3 <- quantile(library_df$Library_Size, 0.75)
+
+IQR_value <- Q3 - Q1
+IQR_value
+
+lower_limit <- Q1 - 1.5 * IQR_value
+upper_limit <- Q3 + 1.5 * IQR_value
+
+lower_limit
+upper_limit
+
+# check the which samples exhibit small and large library sizes.  
+
+library_df %>%
+  filter(
+    Library_Size < lower_limit |
+      Library_Size > upper_limit
+  )
+
+
+
+## create a general template for theme for all the QC plots 
+publication_theme <- theme_classic(base_size = 14) +
+  theme(
+    axis.text = element_text(size = 12),
+    axis.title = element_text(size = 18, face = "bold"),
+    plot.title = element_text(
+      size = 16,
+      face = "bold",
+      hjust = 0.5
+    ),
+    legend.title = element_text(face = "bold"),
+    legend.text = element_text(size = 12)
+  )
+
+
+# make changes to publication theme for fit best for the library size plot 
+
+publication_theme <- theme_classic(base_size = 14) +
+  theme(
+    axis.text.x = element_text(
+      size = 10,
+      angle = 90,
+      hjust = 1,
+      face = "plain"
+    ),
+    plot.title = element_text(
+      hjust = 0.5,
+      size = 35,
+      face = "bold"
+    ),
+    axis.title.y = element_text(
+      size = 25,
+      face = "bold")
+  )
+
+# visualise the library size 
+
+library_size_plot <- ggplot(
+  library_df,
+  aes(
+    x = Sample,
+    y = Library_Size
+  )
+) +
+  geom_col(width = 0.7) +
+  labs(
+    title = "Library size distribution",
+    y = "Library size (million reads)",
+    x = ""
+  ) +
+  scale_y_continuous(
+    limits = c(0, max(library_df$Library_Size) * 1.1),
+    expand = c(0, 0)
+  ) +
+  publication_theme
+
+
+
+library_size_plot
+
+
+
+
+# save the library size plot by calling the save function 
+
+
+save_plot_with_ggsave(
+  plot_obj = library_size_plot,
+  filename = "library_size_plot.pdf",
+  width = 30,
+  height = 12
+)
+
+
+# variance-stabilizing transform for QC
+
+vsd <- vst(dds_obj, blind = TRUE)
+
+# perform the PCA 
+
+pca_data <- plotPCA(
+  vsd,
+  intgroup = "cell_types",
+  returnData = TRUE
+)
+
+nrow(vsd)
+head(pca_data)
+
+#check number of sample per group again to draw an ellipse 
+table(pca_data$cell_types)
+
+# convert PC fractions to percentage 
+percent_var <- round(
+  100 * attr(pca_data, "percentVar")
+)
+
+
+# generate a vst PCA plot
+pca_plot <- ggplot(
+  pca_data,
+  aes(
+    x = PC1,
+    y = PC2,
+    colour = cell_types,
+    label = name
+  )
+) +
+  geom_point(size = 3) +
+  geom_text(
+    size = 3,
+    vjust = -1
+  ) +
+  stat_ellipse(
+    aes(group = cell_types),
+    type = "norm",
+    linewidth = 1
+  ) +
+  labs(
+    title = "PCA of RNA-seq samples",
+    x = paste0("PC1 (", percent_var[1], "% variance)"),
+    y = paste0("PC2 (", percent_var[2], "% variance)"),
+    colour = "Cell Type"
+  ) +
+  theme_bw(base_size = 14) +
+  theme(
+    # PCA title
+    plot.title = element_text(
+      size = 30,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    # Axis titles
+    axis.title.x = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    axis.title.y = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    # Axis text
+    axis.text.x = element_text(size = 15),
+    axis.text.y = element_text(size = 15),
+    
+    # Legend inside plot (right side)
+    legend.position = "inside",
+    legend.position.inside = c(0.95, 0.2),
+    legend.justification = c("right", "center"),
+    
+    # Legend formatting
+    legend.title = element_text(
+      size = 15,
+      face = "bold"
+    ),
+    legend.text = element_text(
+      size = 13
+    ),
+    legend.background = element_rect(
+      fill = "white",
+      colour = "black"
+    )
+  )
+
+
+
+
+pca_plot
+
+# call the save the pca plot 
+save_plot_with_ggsave(
+  plot_obj = pca_plot,
+  filename = "deseq2_pca_plot.pdf",
+  width = 20,
+  height = 20
+)
+
+
+
+
+
+
+# check gene expression distribution using density plot 
+
+vst_df <- as.data.frame(assay(vsd)) %>%
+  rownames_to_column("gene") %>%
+  pivot_longer(
+    cols = -gene,
+    names_to = "sample",
+    values_to = "expression"
+  )
+
+head(vst_df)
+
+
+## add the cell_type column 
+vst_df <- vst_df |>
+  left_join(
+    data.frame(
+      sample = colnames(vsd),
+      cell_types = colData(vsd)$cell_types
+    ),
+    by = "sample"
+  )
+
+head(vst_df)
+
+
+# create ggplot of gene expression distribution 
+
+celltype_colors <- c(
+  cDC1 = "#377EB8",
+  cDC2 = "#4DAF4A",
+  DC3 = "#984EA3",
+  B  = "#FF7F00",
+  mo1 = "#E41A1C",
+  mo2 = "#A65628",
+  moint = "#F781BF",
+  pDC = "#999999",
+  tDC = "#66C2A5"
+)
+
+
+gene_expression_dist <- ggplot(
+  vst_df,
+  aes(
+    x = expression,
+    colour = cell_types,
+    group = sample
+  )
+) +
+  geom_density(
+    linewidth = 1.2,
+    alpha = 0.9
+  ) +
+  scale_colour_manual(
+    values = celltype_colors
+  ) +
+  labs(
+    title = "Distribution of VST-transformed gene expression",
+    x = "Expression level (VST)",
+    y = "Density",
+    colour = "Cell type"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    plot.title = element_text(
+      size = 30,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    axis.title.x = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    axis.text.x = element_text(
+      size = 20
+    ),
+    
+    axis.text.y = element_text(
+      size = 20
+    ),
+    
+    legend.title = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    legend.text = element_text(
+      size = 20
+    ),
+    
+    legend.key.height = unit(0.8, "cm")
+  )
+
+gene_expression_dist
+
+
+
+save_plot_with_ggsave(
+  plot_obj = gene_expression_dist,
+  filename = "gene_expression_dist.pdf",
+  width = 30,
+  height = 25
+)
+
+# add facet wrap
+gene_expression_dist_facet <- ggplot(
+  vst_df,
+  aes(
+    x = expression,
+    fill = cell_types,
+    group = sample
+  )
+) +
+  geom_density(
+    alpha = 0.5,
+    linewidth = 2
+  ) +
+  facet_wrap(
+    ~ cell_types,
+    ncol = 3,
+    scales = "free_y"
+  ) +
+  scale_fill_manual(
+    values = celltype_colors
+  ) +
+  labs(
+    title = "Expression distribution by cell type",
+    x = "VST expression",
+    y = "Density"
+  ) +
+  theme_classic(base_size = 14) +
+  theme(
+    # Facet labels
+    strip.text = element_text(
+      size = 25,
+      face = "bold"
+    ),
+    
+    strip.background = element_rect(
+      linewidth = 2
+    ),
+    
+    # Remove legend
+    legend.position = "none",
+    
+    # Plot title
+    plot.title = element_text(
+      size = 30,
+      face = "bold",
+      hjust = 0.5
+    ),
+    
+    # Axis titles
+    axis.title.x = element_text(
+      size = 22,
+      face = "bold"
+    ),
+    
+    axis.title.y = element_text(
+      size = 22,
+      face = "bold"
+    ),
+    
+    # Axis tick labels
+    axis.text.x = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    axis.text.y = element_text(
+      size = 16,
+      face = "bold"
+    ),
+    
+    # Axis tick marks
+    axis.ticks = element_line(
+      linewidth = 1.2
+    ),
+    
+    # Length of ticks
+    axis.ticks.length = unit(
+      0.25,
+      "cm"
+    )
+  )
+
+gene_expression_dist_facet
+
+save_plot_with_ggsave(
+  plot_obj = gene_expression_dist_facet,
+  filename = "gene_expression_dist_facet.pdf",
+  width = 30,
+  height = 25
+)
+
+
+
+
+
+
+# Calculate sample distances
+sampleDist <- dist(t(assay(vsd)))
+
+sampleDistMatrix <- as.matrix(sampleDist)
+
+# Sample annotation
+annotation_df <- data.frame(
+  Cell_type = dds_obj$cell_types
+)
+
+rownames(annotation_df) <- colnames(dds_obj)
+
+head (annotation_df)
+
+# Define annotation colours
+celltype_colors <- c(
+  B = "#E41A1C",
+  cDC1 = "#377EB8",
+  cDC2 = "#984EA3",
+  DC3 = "#FF7F00",
+  mo1 = "#4DAF4A",
+  mo2 = "#A65628",
+  moint = "#F781BF",
+  pDC = "#999999",
+  tDC = "#66C2A5"
+)
+
+
+# Annotation with customised legend
+ha <- HeatmapAnnotation(df = annotation_df,
+                        col = list(Cell_type = celltype_colors
+                                   ),
+                        annotation_name_gp = gpar(fontsize = 15,
+                                                  fontface = "bold"
+                                                  ),
+                        annotation_legend_param = list(Cell_type = list(title = "Cell Type",
+                                                                        title_gp = gpar(fontsize = 20,
+                                                                                        fontface = "bold"
+                                                                                        ),
+                                                                        labels_gp = gpar(fontsize = 15
+                                                                                         ),
+                                                                        grid_height = unit(0.6,
+                                                                                           "cm"
+                                                                                           ),
+                                                                        grid_width = unit(
+                                                                          0.6,
+                                                                          "cm"
+                                                                          )
+                                                                        )
+                                                       )
+                        )
+
+
+# Create heatmap
+sample_distance_heatmap <- Heatmap(sampleDistMatrix,
+                                   name = "Distance",
+                                   top_annotation = ha,
+                                   column_title = "Sample-to-sample distance",
+                                   column_title_gp = gpar(fontsize = 30,
+                                                          fontface = "bold"
+                                                          ),
+                                   row_title = "Samples",
+                                   row_title_gp = gpar(fontsize = 25,
+                                                       fontface = "bold"
+                                                       ),
+                                   cluster_rows = TRUE,
+                                   cluster_columns = TRUE,
+                                   row_names_gp = gpar(
+                                     fontsize = 8
+                                     ),
+                                   column_names_gp = gpar(fontsize = 8
+                                                          ),
+                                   
+                                   heatmap_legend_param = list(title = "Distance",
+                                                               
+                                                               title_gp = gpar(fontsize = 20,
+                                                                               fontface = "bold"
+                                                                               ),
+                                                               
+                                                               labels_gp = gpar(fontsize = 15
+                                                                                ),
+                                                               
+                                                               grid_height = unit(0.6,
+                                                                                  "cm"
+                                                                                  ),
+                                                               
+                                                               grid_width = unit(0.6,
+                                                                                 "cm"
+                                                                                 )
+                                                               )
+                                   )
+
+
+# Draw heatmap
+draw(sample_distance_heatmap,
+     heatmap_legend_side = "right",
+     annotation_legend_side = "right"
+     )
+
+pdf("plots/bulk_plot/sample_distance_heatmap.pdf",
+    width = 20,
+    height = 18
+    )
+
+#draw(sample_distance_heatmap,
+     #heatmap_legend_side = "right",
+     #annotation_legend_side = "right"
+     #)
+
+# close all active graphic devices 
+while (!is.null(dev.list())) { dev.off() }
+
+
+# 5.2  run DESeq2  =============================================================================================================================
 dds_pairwise <- DESeq(dds_obj)
+
+
+## post DGE visualisation=======================================================================================================================
+
+# diagnostic dispersion plot 
+
+# Adjust general axis text size and orientation before plotting
+# 1. Open the file device FIRST (Set filename and resolution)
+
+
+# Replace "plots" with the exact name of your existing folder
+pdf("plots/bulk_plot/DESeq2_dispersion_plot.pdf", width = 21, height = 18)
+
+par(las = 1, mar = c(5, 5, 4, 2) + 0.1)
+
+plotDispEsts(
+  dds_pairwise,
+  main = "DESeq2 dispersion estimates",
+  xlab = "Mean normalized counts",
+  ylab = "Dispersion",
+  cex.lab = 1.5,
+  cex.axis = 1.0,
+  cex.main = 2.0
+)
+
+while (!is.null(dev.list())) { dev.off() }
+
+
+
+
+# Results and visualisation ======================================================================================================================
+
 
 #check comparisons (coefficients)
 resultsNames(dds_pairwise)
-
-
-## 5.2.1 Deseq2 results retrieval ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # retrieve the specific levels results
 
@@ -788,6 +1405,7 @@ colData(dds_pairwise)$cell_types
 
 res_B_cDC1 <- results(dds_pairwise, contrast = c("cell_types", "B", "cDC1"))
 
+res_B_cDC1
 # add symbols 
 res_B_cDC1$symbol <- rowData(dds_pairwise)[ rownames(res_B_cDC1), "symbol" ]
 res_B_cDC1$genes <- rownames(res_B_cDC1)
@@ -964,7 +1582,7 @@ b_cdc1_volcano_plot
 
 
 
-## 5.2.2 create functions for similar analyses ----------------------------------------------------------------------------------------------------------------------------------------------------------
+## 5.2.3 create functions for similar analyses ----------------------------------------------------------------------------------------------------------------------------------------------------------
 # convert codes from 5.2 into a functions 
 
 # This function get result Deseq result object for each specific comparison 
@@ -1111,7 +1729,7 @@ prepare_volcano_data_fun <- function(res_df,
       )
     )
   
-  
+   
   # Select top significant DEGs based on absolute fold change
   top_DEGs <- res_volcano_df %>%
     filter(padj < top_padj_cutoff) %>%
@@ -1238,7 +1856,7 @@ plot_volcano_DESeq2 <- function(
 
 
 
-## 5.2.3  call the DESeq functions in 5.2.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## 5.2.4  call the DESeq functions in 5.2.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # call the DESeq2 comparison and result retrieval function 
 
@@ -1580,28 +2198,6 @@ create_heatmap_data <- function(dds_pairwise,
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # Heatmap generator with unified expression scaling and fixed cell-type palette
 generate_heatmap <- function(heatmap_data,
                              main_title = "Top 25 cDC1 cells markers",
@@ -1681,67 +2277,8 @@ generate_heatmap <- function(heatmap_data,
   )
 }
 
-# This functions displays a specified gene numbers in a heat map
 
-#generate_heatmap <- function(heatmap_data,
-                             #main_title = "Top 25 cDC1 cells markers",
-                             #gene_symbols = NULL) {
   
-  # Prepare annotation – ensure it's a data frame with one column
-  # If heatmap_data$annotation_df$cell_types is already a data frame,
-  # we convert it to a one‑column data frame with the desired name.
-  # If it's a vector, we wrap it.
-  #if (is.data.frame(heatmap_data$annotation_df$cell_types)) {
-   # annotation_df <- heatmap_data$annotation_df$cell_types
-   # colnames(annotation_df) <- "Cell Types"
- # } else {
-  #  annotation_df <- data.frame(`Cell Types` = heatmap_data$annotation_df$cell_types,
-        #                        stringsAsFactors = FALSE)
- # }
-  
-  # Create column annotation
- # celltype_annotation <- ComplexHeatmap::HeatmapAnnotation(
-  #  df = annotation_df,
-    #annotation_name_side = "right"
-  #)
-  
-  # Row labels
-  #if (!is.null(gene_symbols)) {
-   # row_labels <- gene_symbols
- # } else {
- #   row_labels <- rownames(heatmap_data$scaled_matrix)
- # }
-  
-  # Create the heatmap
- # ComplexHeatmap::Heatmap(
-  #  matrix = heatmap_data$scaled_matrix,
-   # top_annotation = celltype_annotation,
-   # row_labels = row_labels,
-   ## show_row_names = TRUE,
-    #show_column_names = FALSE,
-    #cluster_rows = TRUE,
-    #cluster_columns = TRUE,
-   # row_names_gp = grid::gpar(fontsize = 8, fontface = "bold"),
-    #column_names_gp = grid::gpar(fontsize = 6),
-    #col = circlize::colorRamp2(
-     # seq(-2, 2, length.out = 100), 
-     # colorRampPalette(c("navy", "white", "firebrick3"))(100)
-   # ),
-  #  column_title = paste(main_title, "-", heatmap_data$transformation),
-   # name = "expression",
-   # border = TRUE,
-   # heatmap_legend_param = list(
-    #  title = "expression",
-     # title_position = "topcenter",
-     # legend_direction = "horizontal",
-     # title_gp = grid::gpar(fontsize = 10, fontface = "bold")
-   # )
- # )
-#}
-
-
-
-
 
 
 # 5.3.1 call the downstream analysis functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1765,8 +2302,10 @@ summary_tbl <- pairwise_output$summary %>%
   arrange(comparison)
 
 
+colnames(pairwise_output$summary)
+
 # rename the table columns  
-summary_tbl <- summary_tbl %>%
+summary_tbl1 <- summary_tbl %>%
   rename(
     Comparison = comparison,
     `Up-regulated in Cell1` = n_higher_in_cell1,
@@ -1774,9 +2313,11 @@ summary_tbl <- summary_tbl %>%
     `Total DEGs` = total_DEGs
   )
 
+summary_tbl1
+
 #create a coloured table 
 # customise the table 
-gt_tbl_pub <- summary_tbl %>%
+gt_tbl_pub <- summary_tbl1 %>%
   gt() %>%
   
   # Left-align all columns
@@ -1882,6 +2423,7 @@ B_up_df %>%
 # call the function that would return most differential expressed genes 
 top25_B_genes <- top_genes_fn(df_hd_data = B_up_df , top_n = 25, min_comparisons = 8) 
 top25_cDC1_genes <- top_genes_fn(df_hd_data = cDC1_up_df , top_n = 25, min_comparisons = 8) 
+
 top25_cDC2_genes <- top_genes_fn(df_hd_data = cDC2_up_df , top_n = 25, min_comparisons = 7) 
 top25_DC3_genes <- top_genes_fn(df_hd_data = DC3_up_df , top_n = 25, min_comparisons = 7) 
 top25_pDC_genes <- top_genes_fn(df_hd_data = pDC_up_df , top_n = 25, min_comparisons = 8) 
@@ -1892,6 +2434,26 @@ top25_moint_genes <- top_genes_fn(df_hd_data = moint_up_df , top_n = 25, min_com
 
 
 # combine the identified top genes per cell into a one single object 
+
+all_cell_gene_table <- bind_rows(
+  tibble(Cell = "B",       Gene = top25_B_genes),
+  tibble(Cell = "cDC1",    Gene = top25_cDC1_genes),
+  tibble(Cell = "cDC2",    Gene = top25_cDC2_genes),
+  tibble(Cell = "DC3",     Gene = top25_DC3_genes),
+  tibble(Cell = "pDC",     Gene = top25_pDC_genes),
+  tibble(Cell = "tDC",     Gene = top25_tDC_genes),
+  tibble(Cell = "mo1",     Gene = top25_mo1_genes),
+  tibble(Cell = "mo2",     Gene = top25_mo2_genes),
+  tibble(Cell = "moint",   Gene = top25_moint_genes)
+)
+
+
+all_cell_gene_table 
+
+
+
+
+
 cell_gene_table <- bind_rows(
   tibble(Cell = "B",       Gene = top25_B_genes$symbol),
   tibble(Cell = "cDC1",    Gene = top25_cDC1_genes$symbol),
@@ -1915,7 +2477,6 @@ cell_gene_horizontal <- cell_gene_table %>%
   )
 
 cell_gene_horizontal
-
 
 
 
@@ -1981,9 +2542,6 @@ gtsave(
 )
 
 
-# find common between cell types 
-intersect(top25_moint_genes$symbol, top25_mo2_genes$symbol)
-
 
 # again create another list of the top genes from all cell types picking only the top 3 genes from each cell
 # then make a visual table 
@@ -1997,6 +2555,72 @@ cell_dfs <- list("cDC1" = top25_cDC1_genes,
                  "pDC" = top25_pDC_genes,
                  "tDC" = top25_tDC_genes
                  )
+
+
+
+
+## shared genes 
+
+shared_genes <- list(
+  cDC1 = top25_cDC1_genes$symbol,
+  cDC2 = top25_cDC2_genes$symbol,
+  DC3  = top25_DC3_genes$symbol,
+  Bcell = top25_B_genes$symbol,
+  mo1 = top25_mo1_genes$symbol,
+  mo2 = top25_mo2_genes$symbol,
+  moint = top25_moint_genes$symbol,
+  pDC = top25_pDC_genes$symbol,
+  tDC = top25_tDC_genes$symbol
+)
+
+
+intersect(top25_DC3_genes$symbol, top25_cDC2_genes$symbol)
+
+
+# generate UPsetR plot 
+
+shared_genes_plot<- upset(
+  fromList(shared_genes ),
+  sets = c("cDC1", "cDC2",
+           "DC3","Bcell",
+           "mo1","mo2", 
+           "moint", "pDC", 
+           "tDC"),
+  keep.order = TRUE,
+  nintersects = 10,
+  order.by = "freq",
+  sets.bar.color = "grey30",
+  main.bar.color = "steelblue",
+  matrix.color = "black",
+  text.scale = c(3,2.2,2.2,2.2,2.5,3),
+  point.size = 5,
+  line.size = 1.5,
+  show.numbers = "yes",
+  mainbar.y.label = "Number of shared genes",
+  sets.x.label = "Number of genes per cell type",
+  mb.ratio = c(0.65,0.35)
+)
+
+shared_genes_plot
+
+
+grid.text(
+  "Shared Differentially Expressed Genes",
+  y = unit(0.98, "npc"),
+  gp = gpar(fontsize = 30, fontface = "bold")
+)
+
+
+shared_genes_plot
+
+pdf(
+  "plots/bulk_plot/shared_genes_upset.pdf",
+  width = 20,
+  height = 20
+  )
+
+
+
 
 # pick the top 3 for each cell type and  make a table   
 top3_stats_summary <- lapply(names(cell_dfs), function(name) {
@@ -2178,7 +2802,7 @@ heatmap_data_cDC1 <- create_heatmap_data(dds_pairwise = dds_pairwise,
                                          top_genes_df = top25_cDC1_genes, 
                                          metadata_cols = "cell_types", 
                                          use_vst = TRUE)
-#cDC2
+# cDC2
 
 heatmap_data_cDC2 <- create_heatmap_data(dds_pairwise = dds_pairwise, 
                                          top_genes_df = top25_cDC2_genes, 
@@ -2214,20 +2838,15 @@ heatmap_data_mo2 <- create_heatmap_data(dds_pairwise = dds_pairwise,
                                         metadata_cols = "cell_types", 
                                         use_vst = TRUE)
 
-#mo2 
+# mo2 
 heatmap_data_moint <- create_heatmap_data(dds_pairwise = dds_pairwise, 
                                           top_genes_df = top25_moint_genes, 
                                           metadata_cols = "cell_types", 
                                           use_vst = TRUE)
 
 
-# heatmaps  of the different cell types plus a combine cell type top 3 genes 
+# heatmaps of the different cell types plus a combine cell type top 3 genes 
 # top3 combine genes (global) heatmap 
-
-
-# seed to allow exact same data reproduced 
-#set.seed(123)
-
 # global (combine cell type) heatmap 
 heatmap_plot <- generate_heatmap(heatmap_data = heatmap_data,
                   main_title = "Top 25 combine markers",
@@ -2326,6 +2945,7 @@ for (i in names(heatmap_list)) {
     height = 6
   )
 }
+
 
 
 
