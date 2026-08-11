@@ -30,11 +30,11 @@ Following the downloads, file paths would be:
 ### R environment setup:
 A renv was was set up for analyses reproduciblity and package management. 
 To recreate these analyses: 
-- use this code and link: ***git clone https://github.com/USERNAME/MSc_thesis_analysis.git***
+- use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/tree/main***
 - open the ***MSc_thesis_analysis.Rproj***
 - Run the following codes on the R console:
-  - ***install.packages("renv")***
-  - ***renv::restore()***.
+  -***install.packages("renv")***
+  -***renv::restore()***.
     
 R would automatically install required exact versions of packages and their dependencies used in this project stored in the renv.lock file.
 
@@ -49,7 +49,7 @@ During the running of the source codes, each script automatically generate's fig
 - The bulk script would store its output in  => **plots/bulk_plot/**
 - While the single-cell script => **plots/scrna_plot/**
 
-Note: some generated output files are intermediate objects required especially for single-cell analysis comaparsion may to be stored in the repository but remain as output in the R global environment. 
+**Note:** There is a generated output intermediate object by bulk RNA-seq source code required to compare single-cell analysis results against bulk RNA-seq result. This intermediate object is stored in the R global environment, hence the need to run the bulk RNA-seq source code first otherwise, the single-cell would generate an error during the course of running. 
 
 ### Software requirement
 - R Version: 4.4.3
@@ -59,11 +59,23 @@ Note: some generated output files are intermediate objects required especially f
 - renv for dependency management
 - Git and Git Hub
 
-### Packages and description
-Bioconductor packages were also managed through **BiocManager** as well renv.lock file
+### Packages description and dependencies 
+
+The packages were obtained from CRAN and Bioconductor. The Bioconductor packages were also managed through **BiocManager** as well renv.lock file.
+- ***Dependencies:*** 
+The following packages require dependencies as indicated by the arrow: 
+gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected. Then run these two codes to get it running as expected.
+   - __renv::install(c("gt",
+"webshot2",
+"chromote",
+"websocket",
+"AsioHeaders"
+))__
+   - __renv::snapshot()__
+
 
 ***reproducibility***
- __renv:__ Manages the project-specific R environment and package versions
+- __renv:__ Manages the project-specific R environment and package versions
 
 ***Bulk RNA-seq Analysis***
 - __SummarizedExperiment:__ stores and manages all information (metadata) and expression matrix for bulk RNA-seq analysis
