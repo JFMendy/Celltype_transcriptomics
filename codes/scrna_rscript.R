@@ -17,7 +17,6 @@
 }
 
   
-
 ## read in the scRNA-seq  data
 single_cell_data <-readRDS("data/scRNASeq_annotated/hsobj_20221209_annotated.rds")
 
