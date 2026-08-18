@@ -27,6 +27,8 @@ single_cell_data <-readRDS("data/scRNASeq_annotated/hsobj_20221209_annotated.rds
 # make copy of the data  
 single_cell_data2 <- single_cell_data      
 
+
+
 rm(single_cell_data)
 # 2 scRNA-seq inspection ==============================================================================================================================================
 
