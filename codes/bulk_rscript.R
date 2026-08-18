@@ -124,7 +124,6 @@ all(colnames(assay(mydata_bulk_RNA2, "counts")) ==
       rownames(colData(mydata_bulk_RNA2)))
 
 
-rm(keep)
 
 
 # 3 exploratory analysis and visualisation =====================================================================================================================
@@ -225,7 +224,6 @@ sample_demo_table_plot2 <- gridExtra::arrangeGrob(sample_demo_table)
 
 
 # gene count analysis: 
-
 # extract the gene counts information 
 # generate gene count plot
 # order samples by total_gene_counts for nicer visualization
@@ -480,7 +478,7 @@ df_detected_qc_metrics_plot <- ggplot(df_detected_qc_metrics,
   
   # plot labels
   labs(
-    title = "Gene Detection Rate per Sample",
+    title = "Genes Detected per Sample",
     x = "Samples (Ordered by Gene Count)",
     y = "Number of Detected Genes",
     caption = "Yellow Fever: Bulk RNA-Seq Dataset"
@@ -521,7 +519,7 @@ save_plot_with_ggsave(
 
 
 
-# 4 Principle component analysis ==============================================================================
+# 4 Principle component analysis =======================================================================================================================================================
 
 # Normalisation was already done before I received the data 
 
@@ -564,6 +562,8 @@ head(pca_df)
 # Plot PC1 vs PC2
 # round up the % values 
 percentVar <- round(100 * (pca_result$sdev^2 / sum(pca_result$sdev^2)), 1)
+
+percentVar
 
 # provide colors for the cells 
 colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2","#D55E00", "#CC79A7", "black", "#AD7700", "#666666")
@@ -764,7 +764,7 @@ mart_obj <- useEnsembl(biomart = "genes",
                        )
 
 # get biomart saved in mart_obj and pass it to Ensembl database
-# retrive the matching symbols and genes 
+# retrieve the matching symbols and genes 
 # attributes refers to the columns or Ensembl identifiers to match
 annot <- getBM(attributes = c("ensembl_gene_id", 
                               "hgnc_symbol", 
@@ -806,161 +806,161 @@ nrow(dds_obj)
 # sample information after filtering 
 dds_obj
 
-### 5.2 further quality control assessment before DESeq2 ============================================================================================================================== 
-#library  size check 
+### 5.2 further quality control assessment before DESeq2 ----------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+# create library size df 
 
+colnames(colData(dds_obj))
+
+# extract the colnames to sample
 library_df <- data.frame(Sample = colnames(dds_obj),
+                         
+                         #calculate the read number for each sample
+                         # express library size in millions 
                          Library_Size = colSums(counts(dds_obj))/1e6,
-                         Condition = dds_obj$sampleName
+                         
+                         # extract sample name 
+                         Condition = dds_obj$cell_types
                          )
 
 head(library_df)
 
-# check for outliers  
+# remove row names 
+rownames(library_df) <- NULL
+
+
+# calculate descriptive statisitics 
 summary(library_df$Library_Size)
 
 
-# check a box plot to identify outliers 
+# calculate  central tendency values: box plot to identify outliers 
 
-ggplot(library_df, aes(y = Library_Size)) +
-  geom_boxplot() +
-  theme_classic()
-
-
-
-
-# calculate the outliers 
+# Calculate lower and upperlimits
 Q1 <- quantile(library_df$Library_Size, 0.25)
 Q3 <- quantile(library_df$Library_Size, 0.75)
 
-IQR_value <- Q3 - Q1
-IQR_value
+# interquartile range (IQR)
+IQR_value <- IQR(library_df$Library_Size)
 
+# outliers below or above the limits values  
 lower_limit <- Q1 - 1.5 * IQR_value
 upper_limit <- Q3 + 1.5 * IQR_value
 
-lower_limit
-upper_limit
+# classify samples
+library_df <- library_df %>%
+  # create a outlier column 
+  mutate(
+    Outlier = ifelse(
+      # if library size is less (lower_limit) or greater than (upper_limit)  equal outlier 
+      Library_Size < lower_limit | Library_Size > upper_limit,
+      "Outlier",
+      "Normal"
+      )
+    )
 
-# check the which samples exhibit small and large library sizes.  
+# generate a box Plot
 
-library_df %>%
-  filter(
-    Library_Size < lower_limit |
-      Library_Size > upper_limit
-  )
-
-
-
-## create a general template for theme for all the QC plots 
-publication_theme <- theme_classic(base_size = 14) +
+library_size_box_plot <- ggplot(library_df, aes(x = "", y = Library_Size, colour = Outlier)) +
+  
+  geom_boxplot(
+    width = 0.3,
+    outlier.shape = NA,
+    colour = "black"
+  ) +
+  
+  geom_jitter(
+    width = 0.08,
+    size = 4,
+    alpha = 0.8
+  ) +
+  
+  scale_colour_manual(
+    values = c(
+      "Normal" = "blue",
+      "Outlier" = "red"
+    )
+  ) +
+  
+  labs(
+    title = "Distribution of Library Sizes Across Samples",
+    x = NULL,
+    y = "Library Size (Millions of Reads)",
+    colour = "Sample"
+  ) +
+  
+  theme_classic() +
+  
   theme(
-    axis.text = element_text(size = 12),
-    axis.title = element_text(size = 18, face = "bold"),
-    plot.title = element_text(
-      size = 16,
-      face = "bold",
-      hjust = 0.5
-    ),
-    legend.title = element_text(face = "bold"),
-    legend.text = element_text(size = 12)
-  )
-
-
-# make changes to publication theme for fit best for the library size plot 
-
-publication_theme <- theme_classic(base_size = 14) +
-  theme(
-    axis.text.x = element_text(
-      size = 10,
-      angle = 90,
-      hjust = 1,
-      face = "plain"
-    ),
     plot.title = element_text(
       hjust = 0.5,
-      size = 35,
-      face = "bold"
+      face = "bold",
+      size = 18
     ),
     axis.title.y = element_text(
-      size = 25,
-      face = "bold")
+      face = "bold",
+      size = 15
+    ),
+    axis.text.x = element_blank(),
+    axis.ticks.x = element_blank(),
+    legend.title = element_text(face = "bold",
+                                size = 14),
+    legend.text = element_text(size = 12
+  )
   )
 
-# visualise the library size 
 
-library_size_plot <- ggplot(
-  library_df,
-  aes(
-    x = Sample,
-    y = Library_Size
-  )
-) +
-  geom_col(width = 0.7) +
-  labs(
-    title = "Library size distribution",
-    y = "Library size (million reads)",
-    x = ""
-  ) +
-  scale_y_continuous(
-    limits = c(0, max(library_df$Library_Size) * 1.1),
-    expand = c(0, 0)
-  ) +
-  publication_theme
-
-
-
-library_size_plot
-
-
-
-
-# save the library size plot by calling the save function 
-
-
+# call the ggsave function
 save_plot_with_ggsave(
-  plot_obj = library_size_plot,
-  filename = "library_size_plot.pdf",
-  width = 30,
-  height = 12
+  plot_obj = library_size_box_plot,
+  filename = "library_size_box_plot.pdf",
+  width = 10,
+  height = 15
 )
 
+
+# PCA plot before DGE 
 
 # variance-stabilizing transform for QC
 
 vsd <- vst(dds_obj, blind = TRUE)
+vsd
 
 # perform the PCA 
+pca_data <- plotPCA(vsd,
+                    intgroup = "cell_types",
+                    returnData = TRUE
+                    )
 
-pca_data <- plotPCA(
-  vsd,
-  intgroup = "cell_types",
-  returnData = TRUE
-)
 
-nrow(vsd)
 head(pca_data)
+
+# check PC loadings  
+
+pc1_loading <- desc(pca_data$PC1)
+
+head(pc1_loading)
 
 #check number of sample per group again to draw an ellipse 
 table(pca_data$cell_types)
 
 # convert PC fractions to percentage 
-percent_var <- round(
-  100 * attr(pca_data, "percentVar")
-)
+# check attributes of pca_data
+attributes(pca_data)
+
+# retrieve  percentvar 
+percent_var <- round(100 * attr(pca_data, 
+                                "percentVar")
+                     )
 
 
 # generate a vst PCA plot
-pca_plot <- ggplot(
-  pca_data,
-  aes(
-    x = PC1,
-    y = PC2,
-    colour = cell_types,
-    label = name
-  )
-) +
+pca_plot <- ggplot(pca_data,
+                   aes(x = PC1,
+                       y = PC2,
+                       colour = cell_types,
+                       label = name
+                       )
+                   ) +
   geom_point(size = 3) +
   geom_text(
     size = 3,
@@ -1027,12 +1027,199 @@ pca_plot
 # call the save the pca plot 
 save_plot_with_ggsave(
   plot_obj = pca_plot,
-  filename = "deseq2_pca_plot.pdf",
+  filename = "deseq2_QC_pca_plot.pdf",
   width = 20,
   height = 20
 )
 
 
+# check the PCA loadings 
+
+# extract TPM matrix
+pca_loading <- assay(vsd)
+
+head(pca_loading)
+
+# extract gene information 
+gene_info <- as.data.frame(rowData(vsd))
+
+head(gene_info)
+
+# calculate the variance of each gene across samples 
+gene_vars <- rowVars(pca_loading)
+
+# keep only variance greater than zero 
+mat_loading <- pca_loading[gene_vars > 0, ]
+
+#head(mat_loading)
+
+# perform PCA
+# before performing PCA transpose the data and do not scale ( switch rows to columns and clolums to rows)
+pca_loading_mat <- prcomp(t(mat_loading), scale. = F)
+
+# contains different dfs 
+
+#head(pca_loading_mat)
+
+# PCA loadings 
+pca_loading_df <- as.data.frame(pca_loading_mat$rotation)
+
+
+# cleaning up the df 
+
+pca_loading_clean <- data.frame(ensembl_id = rownames(pca_loading_mat$rotation),
+                                symbol     = gene_info$symbol, 
+                                PC1        = pca_loading_mat$rotation[, "PC1"],
+                                PC2        = pca_loading_mat$rotation[, "PC2"],
+                                stringsAsFactors = FALSE
+                                )
+
+head(pca_loading_clean)
+
+# clear the data frame row names
+rownames(pca_loading_clean) <- NULL
+
+# view head again 
+head(pca_loading_clean)
+
+
+#  top positive PCs  are PC1 
+#  arrange in descending order of PCs 
+
+top_pc1_pos <- pca_loading_clean %>%
+  arrange(desc(PC1)) %>%
+  select(symbol, PC1) %>%
+  slice_head(n = 5) %>%
+  rename(Loading = PC1) %>%
+  mutate(
+    PC = "PC1",
+    Direction = "Positive"
+  )
+
+head(top_pc1_neg)
+
+
+# top neg pcs of PC1 
+top_pc1_neg <- pca_loading_clean %>%
+  arrange(PC1) %>%
+  select(symbol, PC1) %>%
+  slice_head(n = 5) %>%
+  rename(Loading = PC1) %>%
+  mutate(
+    PC = "PC1",
+    Direction = "Negative"
+  )
+
+
+# top pcs pcs of PC2 
+top_pc2_pos <- pca_loading_clean %>%
+  arrange(desc(PC2)) %>%
+  select(symbol, PC2) %>%
+  slice_head(n = 5) %>%
+  rename(Loading = PC2) %>%
+  mutate(
+    PC = "PC2",
+    Direction = "Positive"
+  )
+
+
+# top neg PC2 
+top_pc2_neg <- pca_loading_clean %>%
+  arrange(PC2) %>%
+  select(symbol, PC2) %>%
+  slice_head(n = 5) %>%
+  rename(Loading = PC2) %>%
+  mutate(
+    PC = "PC2",
+    Direction = "Negative"
+  )
+
+
+
+
+# combine all into single df 
+
+pca_top_genes <- bind_rows(
+  top_pc1_pos,
+  top_pc1_neg,
+  top_pc2_pos,
+  top_pc2_neg
+)
+
+
+pca_top_genes <- pca_top_genes %>%
+  group_by(PC, Direction) %>%
+  arrange(desc(abs(Loading)), .by_group = TRUE) %>%
+  mutate(Rank = row_number()) %>%
+  ungroup()
+
+
+pca_top_genes
+
+
+# generate a publishable table 
+
+pca_loading_gt <- pca_table %>%
+  gt(groupname_col = "PC") %>%
+  
+  tab_header(
+    title = md("**Top Genes Contributing to Principal Components 1 and 2**"),
+    subtitle = "Five genes with the strongest positive and negative loadings for each principal component"
+  ) %>%
+  
+  cols_label(
+    Direction = "Loading Direction",
+    Rank = "Rank",
+    Gene = "Gene",
+    Loading = "PCA Loading"
+  ) %>%
+  
+  fmt_number(
+    columns = Loading,
+    decimals = 4
+  ) %>%
+  
+  cols_align(
+    align = "center",
+    columns = c(Direction, Rank, Loading)
+  ) %>%
+  
+  # Bold body text
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_body()
+  ) %>%
+  
+  # Bold PC1 and PC2 row-group labels
+  tab_style(
+    style = cell_text(weight = "bold"),
+    locations = cells_row_groups()
+  ) %>%
+  
+  tab_options(
+    table.font.size = px(12),
+    heading.title.font.size = px(16),
+    heading.subtitle.font.size = px(12),
+    column_labels.font.weight = "bold"
+  )
+
+pca_loading_gt
+
+
+
+
+# join the two dfs by samp name column 
+#pca_df <- merge(pca_df, metadata_df, by = "sampleName")  
+
+# view the outcome of the operation 
+#head(pca_df)
+
+
+# Plot PC1 vs PC2
+# round up the % values 
+#percentVar <- round(100 * (pca_result$sdev^2 / sum(pca_result$sdev^2)), 1)
+
+#percentVar
 
 
 
@@ -1102,36 +1289,36 @@ gene_expression_dist <- ggplot(
   theme_classic(base_size = 14) +
   theme(
     plot.title = element_text(
-      size = 30,
+      size = 20,
       face = "bold",
       hjust = 0.5
     ),
     
     axis.title.x = element_text(
-      size = 25,
+      size = 15,
       face = "bold"
     ),
     
     axis.title.y = element_text(
-      size = 25,
+      size = 15,
       face = "bold"
     ),
     
     axis.text.x = element_text(
-      size = 20
+      size = 13
     ),
     
     axis.text.y = element_text(
-      size = 20
+      size = 13
     ),
     
     legend.title = element_text(
-      size = 25,
+      size = 15,
       face = "bold"
     ),
     
     legend.text = element_text(
-      size = 20
+      size = 12
     ),
     
     legend.key.height = unit(0.8, "cm")
@@ -1148,90 +1335,79 @@ save_plot_with_ggsave(
   height = 25
 )
 
-# add facet wrap
-gene_expression_dist_facet <- ggplot(
-  vst_df,
-  aes(
-    x = expression,
-    fill = cell_types,
-    group = sample
-  )
-) +
-  geom_density(
-    alpha = 0.5,
-    linewidth = 2
-  ) +
-  facet_wrap(
-    ~ cell_types,
-    ncol = 3,
-    scales = "free_y"
-  ) +
-  scale_fill_manual(
-    values = celltype_colors
-  ) +
-  labs(
-    title = "Expression distribution by cell type",
-    x = "VST expression",
-    y = "Density"
-  ) +
+# add facet wrap plots 
+gene_expression_dist_facet <- ggplot(vst_df,aes(x = expression,
+                                                fill = cell_types,
+                                                group = sample
+                                                )
+                                     ) +
+  
+  geom_density(alpha = 0.5,
+               linewidth = 0.4
+               ) +
+  
+  facet_wrap(~ cell_types,
+             ncol = 3,
+             scales = "free_y"
+             ) +
+  
+  scale_fill_manual(values = celltype_colors
+                    ) +
+  
+  labs(title = "Expression distribution by cell type",
+       x = "VST expression",
+       y = "Density"
+       ) +
+  
   theme_classic(base_size = 14) +
-  theme(
-    # Facet labels
-    strip.text = element_text(
-      size = 25,
-      face = "bold"
-    ),
+  
+  # facet labels
+  theme(strip.text = element_text(size = 16,
+                                  face = "bold"
+                                  ),
+        
+        strip.background = element_rect(linewidth = 0.5),
     
-    strip.background = element_rect(
-      linewidth = 2
-    ),
-    
-    # Remove legend
+    # remove legend
     legend.position = "none",
     
-    # Plot title
-    plot.title = element_text(
-      size = 30,
-      face = "bold",
-      hjust = 0.5
-    ),
+    # plot title
+    plot.title = element_text(size = 20,
+                              face = "bold",
+                              hjust = 0.5
+                              ),
     
-    # Axis titles
-    axis.title.x = element_text(
-      size = 22,
-      face = "bold"
-    ),
+    # axis titles
+    axis.title.x = element_text(size = 15,
+                                face = "bold"
+                                ),
     
-    axis.title.y = element_text(
-      size = 22,
-      face = "bold"
-    ),
+    axis.title.y = element_text(size = 15,
+                                face = "bold"
+                                ),
     
     # Axis tick labels
-    axis.text.x = element_text(
-      size = 16,
-      face = "bold"
-    ),
+    axis.text.x = element_text(size = 12,
+                               face = "bold"
+                               ),
     
-    axis.text.y = element_text(
-      size = 16,
-      face = "bold"
-    ),
+    axis.text.y = element_text(size = 12,
+                               face = "bold"
+                               ),
     
     # Axis tick marks
-    axis.ticks = element_line(
-      linewidth = 1.2
-    ),
+    axis.ticks = element_line(linewidth = 0.8
+                              ),
     
     # Length of ticks
-    axis.ticks.length = unit(
-      0.25,
-      "cm"
+    axis.ticks.length = unit(0.25,
+                             "cm"
+                             )
     )
-  )
 
 gene_expression_dist_facet
 
+# call save function 
 save_plot_with_ggsave(
   plot_obj = gene_expression_dist_facet,
   filename = "gene_expression_dist_facet.pdf",
@@ -1280,10 +1456,10 @@ ha <- HeatmapAnnotation(df = annotation_df,
                                                   fontface = "bold"
                                                   ),
                         annotation_legend_param = list(Cell_type = list(title = "Cell Type",
-                                                                        title_gp = gpar(fontsize = 20,
+                                                                        title_gp = gpar(fontsize = 14,
                                                                                         fontface = "bold"
                                                                                         ),
-                                                                        labels_gp = gpar(fontsize = 15
+                                                                        labels_gp = gpar(fontsize = 12
                                                                                          ),
                                                                         grid_height = unit(0.6,
                                                                                            "cm"
@@ -1302,11 +1478,11 @@ sample_distance_heatmap <- Heatmap(sampleDistMatrix,
                                    name = "Distance",
                                    top_annotation = ha,
                                    column_title = "Sample-to-sample distance",
-                                   column_title_gp = gpar(fontsize = 30,
+                                   column_title_gp = gpar(fontsize = 20,
                                                           fontface = "bold"
                                                           ),
                                    row_title = "Samples",
-                                   row_title_gp = gpar(fontsize = 25,
+                                   row_title_gp = gpar(fontsize = 15,
                                                        fontface = "bold"
                                                        ),
                                    cluster_rows = TRUE,
@@ -1319,11 +1495,11 @@ sample_distance_heatmap <- Heatmap(sampleDistMatrix,
                                    
                                    heatmap_legend_param = list(title = "Distance",
                                                                
-                                                               title_gp = gpar(fontsize = 20,
+                                                               title_gp = gpar(fontsize = 14,
                                                                                fontface = "bold"
                                                                                ),
                                                                
-                                                               labels_gp = gpar(fontsize = 15
+                                                               labels_gp = gpar(fontsize = 12
                                                                                 ),
                                                                
                                                                grid_height = unit(0.6,
@@ -2533,6 +2709,7 @@ marker_gene_gt <- cell_gene_horizontal %>%
   opt_row_striping()
 
 marker_gene_gt
+
 
 
 # then save the table for the top markers 
