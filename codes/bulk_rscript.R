@@ -75,7 +75,7 @@ assayNames(mydata_bulk_RNA2)
 
 
 
-# 2. data wrangling and clean ===============================================================================================================================
+# 2 data wrangling and clean ===============================================================================================================================
 
 # check the sample information 
 colData(mydata_bulk_RNA2)
@@ -521,7 +521,6 @@ save_plot_with_ggsave(
 
 # 4 Principle component analysis =======================================================================================================================================================
 
-# Normalisation was already done before I received the data 
 
 # extract TPM matrix
 tpms <- assay(mydata_bulk_RNA2, 'tpms')
@@ -1425,10 +1424,14 @@ sampleDist <- dist(t(assay(vsd)))
 
 sampleDistMatrix <- as.matrix(sampleDist)
 
+head(sampleDistMatrix)
+
 # Sample annotation
-annotation_df <- data.frame(
-  Cell_type = dds_obj$cell_types
-)
+annotation_df <- data.frame(Cell_type = dds_obj$cell_types
+                            )
+
+head(annotation_df)
+
 
 rownames(annotation_df) <- colnames(dds_obj)
 
@@ -1533,19 +1536,15 @@ pdf("plots/bulk_plot/sample_distance_heatmap.pdf",
 while (!is.null(dev.list())) { dev.off() }
 
 
-# 5.2  run DESeq2  =============================================================================================================================
+# 5.2  run DESeq2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
 dds_pairwise <- DESeq(dds_obj)
 
 
-## post DGE visualisation=======================================================================================================================
+## post DGE visualisation
 
 # diagnostic dispersion plot 
-
-# Adjust general axis text size and orientation before plotting
-# 1. Open the file device FIRST (Set filename and resolution)
-
-
 # Replace "plots" with the exact name of your existing folder
+
 pdf("plots/bulk_plot/DESeq2_dispersion_plot.pdf", width = 21, height = 18)
 
 par(las = 1, mar = c(5, 5, 4, 2) + 0.1)
@@ -1560,14 +1559,14 @@ plotDispEsts(
   cex.main = 2.0
 )
 
-while (!is.null(dev.list())) { dev.off() }
+dev.off()
 
 
 
 
-# Results and visualisation ======================================================================================================================
+#  5.3 Results and visualisation --------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-
+# diagnostic plots (MA and volcano plots)
 #check comparisons (coefficients)
 resultsNames(dds_pairwise)
 
@@ -1758,8 +1757,8 @@ b_cdc1_volcano_plot
 
 
 
-## 5.2.3 create functions for similar analyses ----------------------------------------------------------------------------------------------------------------------------------------------------------
-# convert codes from 5.2 into a functions 
+## 5.3.1 create functions for similar analyses ----------------------------------------------------------------------------------------------------------------------------------------------------------
+# convert codes from 5.3 into a functions 
 
 # This function get result Deseq result object for each specific comparison 
 get_DESeq2_results_df <- function(
@@ -2032,7 +2031,7 @@ plot_volcano_DESeq2 <- function(
 
 
 
-## 5.2.4  call the DESeq functions in 5.2.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## 5.3.2  call the DESeq functions in 5.3.1 -----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # call the DESeq2 comparison and result retrieval function 
 
@@ -2087,7 +2086,7 @@ save_plot_with_ggsave(plot_obj = b_cdc1_volcano_plot,
 
 
 
-# 5.3 Downstream analysis ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 5.4 Downstream analysis ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ## create functions for downstream analyses 
 
 #This function retrieve the all comparisons 
@@ -2457,7 +2456,7 @@ generate_heatmap <- function(heatmap_data,
   
 
 
-# 5.3.1 call the downstream analysis functions ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# 5.4.1 call the downstream analysis functions from(5.4)------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # call the pairwise function (get_pairwise_DEGs) and wrangle the data 
 # shows which comparison is be process at a time 
@@ -2644,6 +2643,18 @@ cell_gene_table <- bind_rows(
 
 cell_gene_table
 
+# save to use in single-Cell analysis 
+saveRDS(
+  cell_gene_table,
+  file = "results/cell_gene_table.rds"
+)
+
+saveRDS(
+  all_cell_gene_table,
+  file = "results/all_cell_gene_table.rds"
+)
+
+
 # pivot wide the combine top genes data; 
 cell_gene_horizontal <- cell_gene_table %>%
   group_by(Cell) %>%
@@ -2754,50 +2765,50 @@ shared_genes <- list(
 intersect(top25_DC3_genes$symbol, top25_cDC2_genes$symbol)
 
 
-# generate UPsetR plot 
+# generate UPsetR plot for shared genes 
 
-shared_genes_plot<- upset(
-  fromList(shared_genes ),
-  sets = c("cDC1", "cDC2",
-           "DC3","Bcell",
-           "mo1","mo2", 
-           "moint", "pDC", 
-           "tDC"),
+pdf(
+  "plots/bulk_plot/shared_genes_upset.pdf",
+  width = 18,
+  height = 16
+)
+
+upset(
+  fromList(shared_genes),
+  sets = c(
+    "cDC1", "cDC2",
+    "DC3", "Bcell",
+    "mo1", "mo2",
+    "moint", "pDC",
+    "tDC"
+  ),
   keep.order = TRUE,
   nintersects = 10,
   order.by = "freq",
   sets.bar.color = "grey30",
   main.bar.color = "steelblue",
   matrix.color = "black",
-  text.scale = c(3,2.2,2.2,2.2,2.5,3),
+  text.scale = c(3, 2.2, 2.2, 2.2, 2.5, 3),
   point.size = 5,
   line.size = 1.5,
   show.numbers = "yes",
-  mainbar.y.label = "Number of shared genes",
-  sets.x.label = "Number of genes per cell type",
-  mb.ratio = c(0.65,0.35)
+  mainbar.y.label = "Number of Shared Genes",
+  sets.x.label = "Number of Genes per Cell Type",
+  mb.ratio = c(0.65, 0.35)
 )
-
-shared_genes_plot
 
 
 grid.text(
-  "Shared Differentially Expressed Genes",
-  y = unit(0.98, "npc"),
-  gp = gpar(fontsize = 30, fontface = "bold")
+  "Shared Genes Across Cell Types",
+  x = 0.5,
+  y = 0.97,
+  gp = gpar(
+    fontsize = 25,
+    fontface = "bold"
+  )
 )
 
-
-shared_genes_plot
-
-pdf(
-  "plots/bulk_plot/shared_genes_upset.pdf",
-  width = 20,
-  height = 20
-  )
-
-
-
+dev.off()
 
 # pick the top 3 for each cell type and  make a table   
 top3_stats_summary <- lapply(names(cell_dfs), function(name) {
