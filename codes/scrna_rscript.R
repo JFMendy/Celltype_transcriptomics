@@ -16,11 +16,13 @@
   library(scDblFinder)
 }
 
+
   
 ## read in the scRNA-seq  data
 single_cell_data <-readRDS("data/scRNASeq_annotated/hsobj_20221209_annotated.rds")
 
-
+top_bulk_genes <-readRDS("results/cell_gene_table.rds")
+top_bulk_genes_list <-readRDS("results/all_cell_gene_table.rds")
 
 # 1 preprocess the data ==================================================================================================================================
 
@@ -46,7 +48,7 @@ head(rownames(single_cell_data2), 10)
 
 
 
-# 3 Quality control and cleaning ======================================================================================================================================
+# 3     Quality control and cleaning ======================================================================================================================================
 
 # clean the data by removing: dying cells -> exhibit high mitochondrial contamination 
 # by removing genes starting with MT -> mitochondrial genes 
@@ -55,122 +57,112 @@ head(rownames(single_cell_data2), 10)
 single_cell_data2[["percent.mt"]] <- PercentageFeatureSet(single_cell_data2, 
                                                           pattern = "^MT-")
 
+head(single_cell_data2@meta.data)
+head(single_cell_data2$percent.mt)
 
-
-# 3.1 Pre cleaning visualization ---------------------------------------------------------------------------------------------------------------------------
+# 3.1   Pre cleaning visualization ---------------------------------------------------------------------------------------------------------------------------
 # Visualize QC Metrics  using the Violin plots
 # plot custmoise 
 # put all cells into one group 
 
-single_cell_data2$QC <- "All cells"
 
-sc_pre_cleaning_vplot <- VlnPlot(single_cell_data2,
-                                 features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
-                                 group.by = "QC",
-                                 cols = "#4C72B0",
-                                 pt.size = 0.1,
-                                 ncol = 3
-                                 )
+qc_violin_before <- 
+  VlnPlot(
+    single_cell_data2,
+    features = c(
+      "nFeature_RNA",
+      "nCount_RNA",
+      "percent.mt"
+    ),
+    pt.size = 0.1,
+    ncol = 3
+  )
 
-
-# adjust plot font sizes 
-sc_pre_cleaning_vplot <- sc_pre_cleaning_vplot & theme_classic(base_size = 22) & theme(axis.title = element_text(size = 20,
-                                                                                                                 face = "bold"
-                                                                                                                 ),
-                                                                                       axis.text = element_text(size = 15
-                                                                                                                ),
-                                                                                       axis.text.x = element_text(size = 15,
-                                                                                                                  face = "bold"
-                                                                                                                  ),
-                                                                                       strip.text = element_text(size = 22,
-                                                                                                                 face = "bold"
-                                                                                                                 ),
-                                                                                       legend.position = "none"
-                                                                                       )
-
-
-# add plot title 
-sc_pre_cleaning_vplot <- sc_pre_cleaning_vplot +
-  plot_annotation(title = "Pre-filtering: Single-cell quality control",
-                  theme = theme(plot.title = element_text(size = 30,
-                                                          face = "bold",
-                                                          hjust = 0.5
-                                                          )
-                                )
-                  )
-
-sc_pre_cleaning_vplot
-
-rm(sc_pre_cleaning_vplot)
+qc_violin_before 
 
 
 
+ggsave(
+  "plots/scrna_plot/QC_violin_before.pdf",
+  plot = qc_violin_before,
+  width = 10,
+  height = 5,
+  units = "in"
+)
 
-
-
-
+rm(qc_violin_before)
 # Scatter plots used to observed the relationship btw genes or percent_MT vs counts 
-# Set a single identity for QC visualization
-Idents(single_cell_data2) <- "QC"
 
-sc_ncount_vs_percent_mt_pre_cleaning_scat_plot <- FeatureScatter(single_cell_data2,
-                                                                feature1 = "nCount_RNA",
-                                                                feature2 = "nFeature_RNA"
-                                                                ) +
-  labs(title = "Pre-filtering: UMI counts vs detected genes",
-       x = "Total UMI counts (nCount_RNA)",
-       y = "Detected genes (nFeature_RNA)"
-       ) +
-  theme_classic(base_size = 18) +
-  theme(plot.title = element_text(size = 25,
-                                  face = "bold",
-                                  hjust = 0.5
-                                  ),
-        axis.title = element_text(size = 20,
-                                  face = "bold"
-                                  ),
-        axis.text = element_text(size = 18
-                                 ),
-        legend.position = "none"
-        )
+scatter_counts_features_before <- FeatureScatter(
+  single_cell_data2,
+  feature1 = "nCount_RNA",
+  feature2 = "nFeature_RNA"
+) +
+  labs(
+    title = "RNA Counts vs Detected Genes",
+    x = "RNA Counts",
+    y = "Detected Genes"
+  ) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(
+      face = "bold",
+      size = 16,
+      hjust = 0.5
+    ),
+    axis.title = element_text(
+      face = "bold",
+      size = 15
+    ),
+    axis.text = element_text(size = 13),
+    legend.position = "none"
+  )
 
-sc_ncount_vs_percent_mt_pre_cleaning_scat_plot
+scatter_counts_mt_before <- FeatureScatter(
+  single_cell_data2,
+  feature1 = "nCount_RNA",
+  feature2 = "percent.mt"
+) +
+  labs(
+    title = "RNA Counts vs Mitochondrial RNA",
+    x = "RNA Counts",
+    y = "Mitochondrial RNA (%)"
+  ) +
+  theme_classic() +
+  theme(
+    plot.title = element_text(
+      face = "bold",
+      size = 16,
+      hjust = 0.5
+    ),
+    axis.title = element_text(
+      face = "bold",
+      size = 15
+    ),
+    axis.text = element_text(size = 13),
+    legend.position = "none"
+  )
 
-# free memory 
-rm(sc_ncount_vs_percent_mt_pre_cleaning_scat_plot)
+qc_scatter_before <-
+  scatter_counts_features_before +
+  scatter_counts_mt_before
 
-graphics.off()
+qc_scatter_before
 
-# ensure all cells have a single identity for QC plotting
 
-sc_ncount_vs_percent_mt_pre_cleaning_scat_plot <- FeatureScatter(single_cell_data2,
-                                                                 feature1 = "nCount_RNA",
-                                                                 feature2 = "percent.mt"
-                                                                 ) +
-  labs(title = "Pre-filtering: UMI counts vs mitochondrial percentage",
-       x = "Total UMI counts (nCount_RNA)",
-       y = "Mitochondrial reads (%)"
-       ) +
-  theme_classic(base_size = 18) +
-  theme(plot.title = element_text(size = 25,
-                                  face = "bold",
-                                  hjust = 0.5
-                                  ),
-        axis.title = element_text(size = 20,
-                                  face = "bold"
-                                  ),
-        axis.text = element_text(size = 18
-                                 ),
-        legend.position = "none"
-        )
 
-sc_ncount_vs_percent_mt_pre_cleaning_scat_plot
+ggsave(
+  "plots/scrna_plot/qc_scatter_before.pdf",
+  plot = qc_scatter_before,
+  width = 10,
+  height = 15,
+  units = "in"
+)
 
-rm(sc_ncount_vs_percent_mt_pre_cleaning_scat_plot)
+rm(qc_scatter_before,scatter_counts_features_before, scatter_counts_mt_before)
 
-graphics.off()
+# 3.2   post filtering visualisation -------------------------------------------------------------------------------------------------------------------------------------------------
 
-#  3.2 data filtering and post filtering visualisation ---------------------------------------------------------------------------------- 
 # filter the genes and counts  
 # remove low quality cells (dead or dying cells), cell-free RNA, or doublets)
  
@@ -190,137 +182,30 @@ single_cell_data2 <- subset(single_cell_data2,
                              percent.mt < max_mt &
                              nCount_RNA > min_counts)
 
-
-
-
-
-
-single_cell_data2[["percent.mt"]] <- PercentageFeatureSet(single_cell_data2,
-                                                          pattern = "^MT-"
-                                                          )
-
-# Post cleaning Visualisation  
-# filtering verification after prepossessing 
-# post filtering violin plot 
-sc_post_filter_volpot <- VlnPlot(single_cell_data2,
-                                 features = c("nFeature_RNA", "nCount_RNA", "percent.mt"),
-                                 group.by = "QC",
-                                 cols = "#4C72B0",
-                                 pt.size = 0.1,
-                                 ncol = 3
-                                 )
-
-
-
-
-
-single_cell_data2$QC <- "All cells"
-# adjust plot font sizes 
-sc_post_filter_volpot <- sc_post_filter_volpot & theme_classic(base_size = 22) & theme(axis.title = element_text(size = 20,
-                                                                                                                 face = "bold"
-                                                                                                                 ),
-                                                                                       axis.text = element_text(size = 15
-                                                                                                                ),
-                                                                                       axis.text.x = element_text(size = 15,
-                                                                                                                  face = "bold"
-                                                                                                                  ),
-                                                                                       strip.text = element_text(size = 22,
-                                                                                                                 face = "bold"
-                                                                                                                 ),
-                                                                                       legend.position = "none"
-                                                                                       )
-
-
-# add plot title 
-sc_post_filter_volpot <- sc_post_filter_volpot +
-  plot_annotation(title = "Post-filtering: Single-cell quality control",
-                  theme = theme(plot.title = element_text(size = 30,
-                                                          face = "bold",
-                                                          hjust = 0.5
-                                                          )
-                                )
-                  )
-sc_post_filter_volpot 
-
-
-
-rm(sc_post_filter_volpot)
-# ensure a single identity for QC visualization
-Idents(single_cell_singlets) <- "QC"
-
-sc_post_filter_ncount_vs_percent_mt_scat_plot <- FeatureScatter(single_cell_singlets,
-                                                                feature1 = "nCount_RNA",
-                                                                feature2 = "percent.mt"
-                                                                ) +
-  labs(title = "Post-filtering: UMI counts vs mitochondrial percentage",
-       x = "Total UMI counts (nCount_RNA)",
-       y = "Mitochondrial reads (%)"
-  ) +
-  theme_classic(base_size = 18) +
-  theme(plot.title = element_text(size = 25,
-                                  face = "bold",
-                                  hjust = 0.5
-  ),
-  axis.title = element_text(size = 20,
-                            face = "bold"
-  ),
-  axis.text = element_text(size = 18
-  ),
-  legend.position = "none"
-  )
-
-sc_post_filter_ncount_vs_percent_mt_scat_plot
-
-
-rm(sc_post_filter_ncount_vs_percent_mt_scat_plot)
-
-
-# Ensure a single identity for QC visualistion
-
-sc_ncount_vs_fnfeature_post_cleaning_scat_plot <- FeatureScatter(single_cell_data2,
-                                                                 feature1 = "nCount_RNA",
-                                                                 feature2 = "nFeature_RNA"
-                                                                 ) +
-  labs(title = "Post-filtering: UMI counts vs detected genes",
-       x = "Total UMI counts (nCount_RNA)",
-       y = "Detected genes (nFeature_RNA)"
-       ) +
-  theme_classic(base_size = 18) +
-  theme(plot.title = element_text(size = 25,
-                                  face = "bold",
-                                  hjust = 0.5
-                                  ),
-  axis.title = element_text(size = 20,
-                            face = "bold"
-                            ),
-  axis.text = element_text(size = 18
-                           ),
-  legend.position = "none"
-  )
-
-sc_ncount_vs_fnfeature_post_cleaning_scat_plot
-
-rm(sc_ncount_vs_fnfeature_post_cleaning_scat_plot)
  
 
-#### check for doublets =========================================================================================================
+# cleaning the working space 
+
+rm(min_counts, min_genes, max_genes,max_mt)
+
+
+
+
+
+# prevent random change in the result 
+set.seed(1234)
 
 #convert a seurat object into singleCellexperiement object 
-set.seed(1234)
 sce <- as.SingleCellExperiment(single_cell_data2)
 
 
 # this create singlets and doublets and doubletsscores columnns
-
-
-
 sce <- scDblFinder(sce,
                    samples = sce$Sample
                    )
 
 
-
-# 3. Add scDblFinder results back to the ORIGINAL Seurat object
+# add scDblFinder results back to the Seurat object
 single_cell_data2$scDblFinder.score <- sce$scDblFinder.score
 single_cell_data2$scDblFinder.class <- sce$scDblFinder.class
 
@@ -342,100 +227,114 @@ table(single_cell_data2$scDblFinder.class)
 mean(single_cell_data2$scDblFinder.class == "doublet") * 100
 
 
-
+# generate histogram of doublets 
 
 doublet_score_plot <- ggplot(single_cell_data2@meta.data,
                              aes(x = scDblFinder.score,
                                  fill = scDblFinder.class
-                             )
-) +
+                                 )
+                             ) +
+  
   geom_histogram(bins = 50,
                  alpha = 0.7,
                  position = "identity"
-  ) +
+                 ) +
   
   # scDblFinder threshold
   geom_vline(xintercept = single_cell_data2@misc$scDblFinder.threshold,
              linetype = "dashed",
              linewidth = 1.2
-  ) +
+             ) +
   
-  # Threshold value
+  # threshold value
   annotate("text",
            x = single_cell_data2@misc$scDblFinder.threshold,
            y = Inf,
-           label = paste0(
-             "Threshold = ",
-             round(single_cell_data2@misc$scDblFinder.threshold, 4)
-           ),
+           label = paste0("Threshold = ",
+                          round(single_cell_data2@misc$scDblFinder.threshold, 4)
+                          ),
            vjust = 1.5,
            hjust = -0.05,
            size = 6
-  ) +
+           ) +
+  
   scale_fill_manual(values = c(singlet = "grey70",
                                doublet = "#D73027"
-  )
-  ) +
+                               )
+                    ) +
+  
   
   labs(title = "Distribution of scDblFinder scores",
        x = "scDblFinder score",
        y = "Number of cells",
        fill = "Cell classification"
-  ) +
+       ) +
+  
   scale_x_continuous(limits = c(0, 1.0),
                      breaks = seq(0, 1.0, by = 0.1),
                      expand = c(0.01, 0)
-  ) +
+                     ) +
+  
   scale_y_continuous(expand = expansion(mult = c(0, 0.05))
-  ) +
+                     ) +
+  
   theme_classic(base_size = 14) +
   
   theme(plot.title = element_text(size = 25,
                                   face = "bold",
                                   hjust = 0.5
-  ),
+                                  ),
   
   axis.title.x = element_text(size = 20,
                               face = "bold"
-  ),
-  axis.title.y = element_text(
-    size = 20,
-    face = "bold"
-  ),
-  
-  axis.text.x = element_text(
-    size = 15
-  ),
+                              ),
+  axis.title.y = element_text(size = 20,
+                              face = "bold"
+                              ),
+
+  axis.text.x = element_text(size = 15
+                             ),
   
   axis.text.y = element_text(
     size = 15
-  ),
+    ),
   
-  axis.ticks = element_line(
-    linewidth = 0.7
-  ),
+  axis.ticks = element_line(linewidth = 0.7
+                            ),
   
-  axis.ticks.length = unit(
-    0.2,
-    "cm"
-  ),
+  axis.ticks.length = unit(0.2,
+                           "cm"
+                           ),
   
-  legend.title = element_text(
-    size = 15,
-    face = "bold"
-  ),
+  legend.title = element_text(size = 15,
+                              face = "bold"
+                              ),
   
-  legend.text = element_text(
-    size = 15
-  )
+  legend.text = element_text(size = 15
+                             )
   )
 
 doublet_score_plot
 
 
+
+ggsave(
+  "plots/scrna_plot/doublet_score_plot.pdf",
+  plot = doublet_score_plot,
+  width = 8,
+  height = 10,
+  units = "in"
+)
+
+
+
+
+# generate doublets summary table 
+
+
 doublet_summary <- tibble(Category = c(rep("Score distribution", 7),
                                        rep("Classification", 5)
-),
+                                       ),
 Metric = c("Cells assessed",
            "Minimum",
            "1st quartile",
@@ -448,7 +347,8 @@ Metric = c("Cells assessed",
            "Singlets (%)",
            "Doublets",
            "Doublets (%)"
-),
+           ),
+
 Value = c(ncol(single_cell_data2),
           min(single_cell_data2$scDblFinder.score, na.rm = TRUE),
           quantile(single_cell_data2$scDblFinder.score, 0.25, na.rm = TRUE),
@@ -461,97 +361,199 @@ Value = c(ncol(single_cell_data2),
           mean(single_cell_data2$scDblFinder.class == "singlet") * 100,
           sum(single_cell_data2$scDblFinder.class == "doublet"),
           mean(single_cell_data2$scDblFinder.class == "doublet") * 1
-)
+          )
 )
 
 doublet_summary
 
-doublet_summary %>%
+
+
+doublet_tbl <- doublet_summary %>%
   gt() %>%
-  fmt_number(
-    columns = Value,
-    rows = Metric %in% c(
-      "Minimum",
-      "1st quartile",
-      "Median",
-      "Mean",
-      "3rd quartile",
-      "Maximum",
-      "Classification threshold"
-    ),
-    decimals = 2
-  ) %>%
-  fmt_number(
-    columns = Value,
-    rows = Metric %in% c(
-      "Singlets (%)",
-      "Doublets (%)"
-    ),
-    decimals = 2,
-    suffix = "%"
-  ) %>%
-  fmt_number(
-    columns = Value,
-    rows = Metric %in% c(
-      "Cells assessed",
-      "Singlets",
-      "Doublets"
-    ),
-    decimals = 0,
-    use_seps = TRUE
-  ) %>%
-  tab_header(
-    title = md(""),
-    subtitle = md("**scDblFinder analysis of the single-cell RNA-seq dataset**")
-  ) %>%
-  cols_label(
-    Category = "Category",
-    Metric = "Measure",
-    Value = "Result"
-  ) %>%
-  tab_style(
-    style = cell_text(
-      size = px(16),
-      weight = "bold"
-    ),
-    locations = cells_column_labels()
-  ) %>%
-  tab_style(
-    style = cell_text(
-      size = px(15)
-    ),
+  fmt_number(columns = Value,
+             rows = Metric %in% c("Minimum",
+                                  "1st quartile",
+                                  "Median",
+                                  "Mean",
+                                  "3rd quartile",
+                                  "Maximum",
+                                  "Classification threshold"
+                                  ),
+             decimals = 2
+             ) %>%
+  
+  fmt_number(columns = Value,
+             rows = Metric %in% c(
+               "Singlets (%)",
+               "Doublets (%)"
+               ),
+             
+             decimals = 2,
+             suffix = "%"
+             ) %>%
+  
+  fmt_number(columns = Value,
+             rows = Metric %in% c("Cells assessed",
+                                  "Singlets",
+                                  "Doublets"
+                                  ),
+             decimals = 0,
+             use_seps = TRUE
+             ) %>%
+  
+  tab_header(title = md(""),
+             subtitle = md("**scDblFinder analysis of the single-cell RNA-seq dataset**")
+             ) %>%
+  
+  cols_label(Category = "Category",
+             Metric = "Measure",
+             Value = "Result"
+             ) %>%
+  
+  tab_style(style = cell_text(size = px(16),
+                              weight = "bold"
+                              ),
+            locations = cells_column_labels()
+            ) %>%
+  
+  tab_style(style = cell_text(size = px(12), weight = "bold"
+                              ),
     locations = cells_body()
+    ) %>%
+  
+  tab_options(table.font.size = px(1),
+              heading.title.font.size = px(20),
+              heading.subtitle.font.size = px(25),
+              data_row.padding = px(14),
+              column_labels.padding = px(12),
+              table.width = pct(80)
+              ) %>%
+  cols_width(
+    Category ~ px(120),
+    Metric ~ px(90),
+    Value ~ px(70)
   ) %>%
   tab_options(
-    table.font.size = px(15),
-    heading.title.font.size = px(30),
-    heading.subtitle.font.size = px(25),
-    data_row.padding = px(14),
-    column_labels.padding = px(15),
-    table.width = pct(95)
-  ) %>%
-  cols_width(
-    Category ~ px(180),
-    Metric ~ px(280),
-    Value ~ px(180)
+    table.width = pct(40)
+  )
+ 
+doublet_tbl
+
+
+gtsave(
+  doublet_tbl,
+  "plots/scrna_plot/doublet_tbl.pdf",
+  vwidth = 800,
+  vheight = 1000
   )
 
 
 # cleaning the data 
 
-#subset and create clean seurat object
+#subset and create clean subseurat object
 
 
 
-single_cell_singlets <- subset(
-  single_cell_data2,
-  subset = scDblFinder.class == "singlet"
+single_cell_singlets <- subset(single_cell_data2,
+                               subset = scDblFinder.class == "singlet"
+                               )
+
+
+
+
+# violin plot 
+
+qc_violin_after <- VlnPlot(single_cell_singlets ,
+                           features = c("nFeature_RNA",
+                                        "nCount_RNA",
+                                        "percent.mt"
+                                        ),
+                           pt.size = 0.1,
+                           ncol = 3
+                           )
+
+qc_violin_after 
+
+
+
+ggsave(
+  "plots/scrna_plot/qc_violin_after .pdf",
+  plot = qc_violin_after ,
+  width = 10,
+  height = 5,
+  units = "in"
 )
 
 
-dim(single_cell_singlets)      # before QC
-       
+
+# scatter plots 
+scatter_counts_features_after <- FeatureScatter(single_cell_singlets,
+                                                feature1 = "nCount_RNA",
+                                                feature2 = "nFeature_RNA"
+                                                ) +
+  
+  labs(title = "RNA Counts vs Detected Genes",
+       x = "RNA Counts",
+       y = "Detected Genes"
+       ) +
+  
+  theme_classic() +
+  theme(plot.title = element_text(face = "bold",
+                                  size = 16,
+                                  hjust = 0.5
+                                  ),
+    axis.title = element_text(face = "bold",
+                              size = 15
+                              ),
+    axis.text = element_text(size = 13),
+    legend.position = "none"
+    )
+
+
+scatter_counts_mt_after <- FeatureScatter(single_cell_singlets,
+                                          feature1 = "nCount_RNA",
+                                          feature2 = "percent.mt"
+                                          ) +
+  
+  labs(title = "RNA Counts vs Mitochondrial RNA",
+       x = "RNA Counts",
+       y = "Mitochondrial RNA (%)"
+       ) +
+  theme_classic() +
+  
+  theme(plot.title = element_text(face = "bold",
+                                  size = 16,
+                                  hjust = 0.5
+                                  ),
+        
+    axis.title = element_text(face = "bold",
+                              size = 15
+                              ),
+    
+    axis.text = element_text(size = 13),
+    legend.position = "none"
+    )
+
+qc_scatter_after <-scatter_counts_features_after + scatter_counts_mt_after
+
+qc_scatter_after
+
+
+# save the plots
+ggsave(
+  "plots/scrna_plot/qc_scatter_after.pdf",
+  plot = qc_scatter_after,
+  width = 10,
+  height = 15,
+  units = "in"
+  )
+
+
+
+    
 #free space 
+
+rm(doublet_summary, doublet_score_plot, doublet_tbl, sce)
 rm(single_cell_data2, sce)
 # 4 normalization ===========================================================================================================================================
 
@@ -655,8 +657,9 @@ scrna_save_plot_with_ggsave(
   height = 8
 )
 
+# clear more space 
+rm(plot1,plot2,qc_scatter_before,qc_scatter_after, scatter_counts_features_after, scatter_counts_mt_after, top10)
 
-rm(single_cell_data2, sce)
 # 8 PCA Analysis =====================================================================================================================================================
 
 # performing a reduction analysis (PCA)
@@ -668,6 +671,8 @@ single_cell_singlets <- RunPCA(single_cell_singlets,
 # check if PCA results exist  
 Reductions(single_cell_singlets)
 
+
+#calculate standard deviation and variance 
 pc_sd <- Stdev(single_cell_singlets,reduction = "pca")
 
 pc_variance <- (pc_sd)^2
@@ -693,7 +698,7 @@ head(pc_table)
 
 
 ## PC standard  table 
-pc_table %>%
+pca_std_tbl <-pc_table %>%
   gt() %>%
   tab_header(
     title = md("**Principal Component Standard Deviations**"),
@@ -716,45 +721,84 @@ pc_table %>%
     locations = cells_column_labels()
   ) %>%
   tab_options(
-    table.font.size = px(16),
+    table.font.size = px(14),
     heading.title.font.size = px(20),
-    heading.subtitle.font.size = px(16),
-    data_row.padding = px(10)
+    heading.subtitle.font.size = px(14),
+    data_row.padding = px(4)
   )
+
+pca_std_tbl
+
+
+gtsave(
+  pca_std_tbl,
+  "plots/scrna_plot/pca_std_tbl.pdf",
+  vwidth = 100,
+  vheight = 100
+)
 
 
 
 ## PCA Plot using dimplot 
 
-DimPlot(single_cell_singlets,
-        reduction = "pca",
-        group.by = "CellType",
-        label = TRUE,
-        label.size = 5,
-        repel = TRUE
-        ) +
-  NoLegend() +
-  labs(x = "PC1",
-       y = "PC2"
-       ) +
+scrrna_pca <- DimPlot(
+  single_cell_singlets,
+  reduction = "pca",
+  group.by = "CellType",
+  label = TRUE,
+  label.size = 5,
+  repel = TRUE
+) +
+  
+  labs(
+    x = paste0("PC1 (", round(pc_percent[1], 2), "%)"),
+    y = paste0("PC2 (", round(pc_percent[2], 2), "%)"),
+    colour = "Cell Type"
+  ) +
   
   theme_bw() +
-  theme(axis.title = element_text(size = 20,
-                                  face = "bold"
-                                  ),
-    axis.text = element_text(size = 16,
-                             face = "bold"
-                             ),
+  
+  theme(
+    axis.title = element_text(
+      size = 20,
+      face = "bold"
+    ),
     
-    axis.ticks = element_line(linewidth = 1
-                              ),
+    axis.text = element_text(
+      size = 16,
+      face = "bold"
+    ),
     
-    axis.ticks.length = unit(0.2, 
-                             "cm")
-    )+
-  labs(x = paste0("PC1 (", round(pc_percent[1], 2), "%)"),
-       y = paste0("PC2 (", round(pc_percent[2], 2), "%)")
-       )
+    axis.ticks = element_line(
+      linewidth = 1
+    ),
+    
+    axis.ticks.length = unit(0.2, "cm"),
+    
+    # Legend customisation
+    legend.position = "right",
+    
+    legend.title = element_text(
+      size = 14,
+      face = "bold"
+    ),
+    
+    legend.text = element_text(
+      size = 12
+    ),
+    
+    legend.key.size = unit(0.6, "cm")
+  )
+
+scrrna_pca
+
+scrna_save_plot_with_ggsave(
+  plot_obj = scrrna_pca,
+  filename = "scrrna_pca.pdf",
+  width = 8,
+  height = 8
+)
+
 
 # to determine the best PCs to choose, use a screeplot/elbowplot
 
@@ -831,33 +875,28 @@ single_cell_singlets<- FindNeighbors(single_cell_singlets, dims = n_pcs)
 
 resolutions = c(0.15, 0.2, 0.5, 0.8,1)
 
- single_cell_singlets <- FindClusters(single_cell_singlets, resolution = resolutions)
+single_cell_singlets <- FindClusters(single_cell_singlets, resolution = resolutions)
  
  
  
  ## run the umap or tSNE
- single_cell_singlets <- RunUMAP(single_cell_singlets,
+single_cell_singlets <- RunUMAP(single_cell_singlets,
                                  dims = 1:25)
  
  
 # number clusters generated by each resolution 
- cluster_numbers <- sapply(resolutions,
+cluster_numbers <- sapply(resolutions,
                            function(x) {length(unique(single_cell_singlets[[paste0("RNA_snn_res.", x)]][, 1]))
                              }
                            )
  
 
  # generate df  of resolutions 
-  data.frame(resolution = resolutions,
+data.frame(resolution = resolutions,
             n_clusters = cluster_numbers
             )
 
-  
-  
-  
- colnames(single_cell_singlets@meta.data)
- 
- str(single_cell_singlets@meta.data$CellType)
+colnames(single_cell_singlets@meta.data)
  
  #single_cell_singlets$CellType <- as.character(
   # single_cell_singlets$CellType
@@ -946,50 +985,7 @@ umap_celltype <- DimPlot(single_cell_singlets,
  
 umap_celltype
  
- 
- 
-#umap_celltype <- DimPlot(
-   #single_cell_singlets,
-   #reduction = "umap",
-   ##group.by = "CellType",
-   #label = TRUE,
-   ##repel = TRUE,
-   #cols = celltype_colors,
-   #pt.size = 0.5
- #) +
-   #labs(
-     #title = "UMAP of Single-Cell RNA-seq Data",
-    # x = "UMAP 1",
-     #y = "UMAP 2"
-   ####) +
-   #####theme_classic() +
-   #theme(
-     #plot.title = element_text(
-      # size = 14,
-       #face = "bold",
-       #hjust = 0.5
-     #),
-     #axis.title = element_text(
-     #  size = 12,
-      # face = "bold"
-     #),
-     #axis.text = element_text(size = 10),
-     #legend.position = "none"
-   #)
- 
-# umap_celltype <- umap_celltype +
- #  theme(
-   #legend.position = "right",
-   #legend.title = element_text(size = 12, face = "bold"),
-   #legend.text = element_text(size = 9),
-   #legend.key.height = unit(0.5, "cm"),
-   #legend.key.width = unit(0.5, "cm")
- #)
- 
- #umap_celltype
- 
-
-
+# save  the plot 
 scrna_save_plot_with_ggsave(
   plot_obj = umap_celltype,
   filename = "umap_cell_types.pdf",
@@ -1312,24 +1308,56 @@ marker_table_gt <- marker_table %>%
     Cell_type = "Cell Type",
     Genes = "Marker Genes"
   ) %>%
+  
+  # Bold column headers
   tab_style(
-    style = cell_text(weight = "bold"),
+    style = cell_text(
+      weight = "bold",
+      size = px(18)
+    ),
     locations = cells_column_labels(everything())
   ) %>%
+  
+  # Bold Cell Type column
   tab_style(
-    style = cell_text(weight = "bold"),
+    style = cell_text(
+      weight = "bold",
+      size = px(16)
+    ),
     locations = cells_body(
       columns = Cell_type
     )
   ) %>%
+  
+  # Body text
+  tab_style(
+    style = cell_text(weight = "bold",
+      size = px(14)
+    ),
+    locations = cells_body(
+      columns = everything()
+    )
+  ) %>%
+  
   tab_options(
     heading.align = "center",
-    table.font.size = px(18),
+    table.font.size = px(14),
     heading.title.font.size = px(20),
     heading.subtitle.font.size = px(16)
   )
 
 marker_table_gt
+
+
+
+
+gtsave(
+  marker_table_gt,
+  "plots/scrna_plot/scrna_marker_table_gt.pdf",
+  vwidth = 100,
+  vheight = 100
+)
+
 
 
 # extract the top 3 gene for each cell type 
@@ -1386,10 +1414,10 @@ top3_markers_scrna_gt <- top3_markers_scrna %>%
     heading.title.font.size = px(18), # Reduced slightly from 20
     heading.subtitle.font.size = px(13),
     # --- REDUCE VERTICAL HEIGHT HERE ---
-    data_row.padding = px(3), # Default is px(6)
-    column_labels.padding = px(4),
-    row_group.padding = px(4),
-    heading.padding = px(4)
+    data_row.padding = px(0.3), # Default is px(6)
+    column_labels.padding = px(1),
+    row_group.padding = px(1),
+    heading.padding = px(1)
   )
 
 
@@ -1397,26 +1425,146 @@ top3_markers_scrna_gt <- top3_markers_scrna %>%
 top3_markers_scrna_gt
 
 
+gtsave(
+  top3_markers_scrna_gt,
+  "plots/scrna_plot/top3_markers_scrna_gt.pdf",
+  vwidth = 100,
+  vheight = 100
+)
+
 # find common genes btw the technologies 
 
 # the "cell_gene_table" is obtained from bulk RNA-seq 
 # it contains top25 genes for each cell type 
 
 # the top 25 genes from bulk RNA-seq 
-head(cell_gene_table) 
+head(top_bulk_genes) 
 
 # top 25 genes from scrna RNA-seq  
 head(top25_scrna_all) 
 
 
+
+comparison_results <- list()
+
+cell_types <- intersect(unique(top_bulk_genes$Cell),
+                        unique(top25_scrna_all$Cell_type)
+                        )
+
+
+# loop through the cell types 
+for (cell_type in cell_types) {
+  
+  bulk_genes <- top_bulk_genes %>%
+    filter(Cell == cell_type) %>%
+    pull(Gene)
+  
+  scrna_genes <- top25_scrna_all %>%
+    filter(Cell_type == cell_type) %>%
+    pull(feature)
+  
+  comparison_results[[cell_type]] <- compare_gene_lists(
+    list_bulk = bulk_genes,
+    list_scrna = scrna_genes
+  )
+}
+
+
+
+## create a table 
+
+comparison_table <- purrr::map_dfr(
+  names(comparison_results),
+  function(cell_type) {
+    
+    result <- comparison_results[[cell_type]]
+    
+    tibble(Cell_type = cell_type,
+           Common = paste(result$common, collapse = ", "),
+           Bulk_only = paste(result$bulk_only, collapse = ", "),
+           scRNA_only = paste(result$scrna_only, collapse = ", ")
+    )
+    }
+  )
+
+
+comparison_table
+
+
+# make the table publishable 
+comparison_table_gt <- comparison_table %>%
+  gt() %>%
+  
+  tab_header(
+    title = md("**Comparison of Top Marker Genes Between Bulk RNA-seq and scRNA-seq**"),
+    subtitle = "Comparison within corresponding cell types"
+  ) %>%
+  
+  cols_label(
+    Cell_type = "Cell Type",
+    Common = "Common Genes",
+    Bulk_only = "Bulk RNA-seq Only",
+    scRNA_only = "scRNA-seq Only"
+  ) %>%
+  
+  # Bold column headers
+  tab_style(
+    style = cell_text(
+      weight = "bold",
+      size = px(14)
+    ),
+    locations = cells_column_labels(everything())
+  ) %>%
+  
+  # Bold cell type
+  tab_style(
+    style = cell_text(
+      weight = "bold",
+      size = px(12)
+    ),
+    locations = cells_body(columns = Cell_type)
+  ) %>%
+  
+  # Body text
+  tab_style(
+    style = cell_text(weight = "bold",
+                      size = px(10)
+    ),
+    locations = cells_body(
+      columns = c(Common, Bulk_only, scRNA_only)
+    )
+  ) %>%
+  
+  tab_options(
+    table.font.size = px(18),
+    heading.align = "center",
+    heading.title.font.size = px(14),
+    heading.subtitle.font.size = px(14),
+    table.width = pct(70)
+  )
+
+comparison_table_gt
+
+gtsave(
+  comparison_table_gt,
+  filename = "plots/scrna_plot/comparison_table_gt.pdf",
+  vwidth = 25000,
+  vheight = 1000
+)
+
+
+# shared gens table only 
 # combine the bulk RNA-seq and scrna 
-overlap_genes <- inner_join(cell_gene_table,
+overlap_genes <- inner_join(top_bulk_genes,
                             top25_scrna_all,
                             by = c(
                               "Cell" = "Cell_type",  # column name of the bulk RNA-seq table 
                               "Gene" = "feature"     # column names of scrna table 
                               )
                             )
+
+
+overlap_genes
 
 # create a list of bulk-RNA-seq top 25 genes per cell 
 # check colnames of the overlap_genes object 
@@ -1470,7 +1618,7 @@ gene_overlap_gt <- overlap_gene_table_wide %>%
   
   # table options
   tab_options(
-    table.font.size = 12,
+    table.font.size = 18,
     data_row.padding = px(4),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
@@ -1489,6 +1637,8 @@ gtsave(
   vwidth = 2000,
   vheight = 1500
 )
+
+
 
 
 # function call 
@@ -1726,6 +1876,7 @@ gtsave(
   styled_table,
   filename = "plots/scrna_plot/cDC1_marker_statistics.pdf"
   )
+
 
 
 

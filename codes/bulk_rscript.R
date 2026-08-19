@@ -1202,8 +1202,10 @@ pca_loading_gt <- pca_table %>%
     column_labels.font.weight = "bold"
   )
 
-pca_loading_gt
-
+gtsave(
+  pca_loading_gt,
+  "plots/bulk_plot/pca_loading_table.pdf"
+  )
 
 
 
