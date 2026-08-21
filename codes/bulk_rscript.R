@@ -562,7 +562,6 @@ head(pca_df)
 # round up the % values 
 percentVar <- round(100 * (pca_result$sdev^2 / sum(pca_result$sdev^2)), 1)
 
-percentVar
 
 # provide colors for the cells 
 colorblind_palette <- c("#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2","#D55E00", "#CC79A7", "black", "#AD7700", "#666666")
@@ -623,7 +622,7 @@ pca_cell_population_plot
 # call the save_plot_with_ggsave function  to save the plot 
 save_plot_with_ggsave(
   plot_obj = pca_cell_population_plot,
-  filename = "pca_cell_population_plot.pdf",
+  filename = "explorative_pca_cell_population_plot.pdf",
   width = 12,
   height = 8
 )
@@ -1095,7 +1094,7 @@ top_pc1_pos <- pca_loading_clean %>%
     Direction = "Positive"
   )
 
-head(top_pc1_neg)
+head(top_pc1_pos)
 
 
 # top neg pcs of PC1 
@@ -1145,7 +1144,7 @@ pca_top_genes <- bind_rows(
   top_pc2_neg
 )
 
-
+# arrange by group 
 pca_top_genes <- pca_top_genes %>%
   group_by(PC, Direction) %>%
   arrange(desc(abs(Loading)), .by_group = TRUE) %>%
@@ -1157,8 +1156,8 @@ pca_top_genes
 
 
 # generate a publishable table 
-
-pca_loading_gt <- pca_table %>%
+colnames(pca_top_genes)
+pca_loading_gt <- pca_top_genes %>%
   gt(groupname_col = "PC") %>%
   
   tab_header(
@@ -1169,7 +1168,7 @@ pca_loading_gt <- pca_table %>%
   cols_label(
     Direction = "Loading Direction",
     Rank = "Rank",
-    Gene = "Gene",
+    symbol = "Gene Symbol",
     Loading = "PCA Loading"
   ) %>%
   
@@ -1202,25 +1201,12 @@ pca_loading_gt <- pca_table %>%
     column_labels.font.weight = "bold"
   )
 
+pca_loading_gt 
+
 gtsave(
   pca_loading_gt,
   "plots/bulk_plot/pca_loading_table.pdf"
   )
-
-
-
-# join the two dfs by samp name column 
-#pca_df <- merge(pca_df, metadata_df, by = "sampleName")  
-
-# view the outcome of the operation 
-#head(pca_df)
-
-
-# Plot PC1 vs PC2
-# round up the % values 
-#percentVar <- round(100 * (pca_result$sdev^2 / sum(pca_result$sdev^2)), 1)
-
-#percentVar
 
 
 
@@ -1529,13 +1515,8 @@ pdf("plots/bulk_plot/sample_distance_heatmap.pdf",
     height = 18
     )
 
-#draw(sample_distance_heatmap,
-     #heatmap_legend_side = "right",
-     #annotation_legend_side = "right"
-     #)
 
-# close all active graphic devices 
-while (!is.null(dev.list())) { dev.off() }
+dev.off()
 
 
 # 5.2  run DESeq2 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- 
