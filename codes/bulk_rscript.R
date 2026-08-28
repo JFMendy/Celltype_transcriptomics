@@ -2692,14 +2692,14 @@ marker_gene_gt <- cell_gene_horizontal %>%
   ) %>%
 
   # increasing body text 
-  tab_style(style = cell_text(size = px(15)),
+  tab_style(style = cell_text(size = px(15), weight = "bold"),
             locations = cells_body()
             ) %>%
   
   # table options
   tab_options(
-    table.font.size = px(15),
-    data_row.padding = px(12),
+    table.font.size = px(18),
+    data_row.padding = px(14),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
     table_body.hlines.color = "grey80"
@@ -2837,8 +2837,8 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
   
   # Table title
   tab_header(
-    title = "Top 3 Differentially Expressed Genes Across Myeloid and Lymphoid Subsets"
-  ) %>%
+    title = "Top 3 Differentially Expressed Genes Across Myeloid and Lymphoid Subsets",
+    ) %>%
   
   # Format table title
   tab_style(
@@ -2879,7 +2879,7 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
       cell_text(
         weight = "bold",
         color = "white",
-        size = px(12),
+        size = px(14),
         align = "center"
       )
     ),
@@ -2917,13 +2917,13 @@ top3_DEGs_per_celltype <- formatted_top3 %>%
   
   # Table formatting options
   tab_options(
-    table.font.size = px(12),
+    table.font.size = px(16),
     data_row.padding = px(5),
     table.width = pct(60),
     table.border.top.color = "black",
     table.border.bottom.color = "black",
     table_body.hlines.color = "grey80",
-    heading.title.font.size = px(14),
+    heading.title.font.size = px(20),
     heading.title.font.weight = "bold"
   ) %>%
   
