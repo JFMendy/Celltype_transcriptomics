@@ -21,6 +21,7 @@
   library(grid)
 
  
+  
   }
 
 # 0.2 read in the data ===================================================================================================================================
@@ -545,8 +546,11 @@ summary(pca_result)
 # extract PC scores + join metadata
 pca_df <- as.data.frame(pca_result$x)
 
+#head(pca_df)
+
 # create name call sampeName 
 pca_df$sampleName <- rownames(pca_df)
+head(pca_df)
 
 # meta data extraction  in a df 
 metadata_df <- as.data.frame(colData(mydata_bulk_RNA2))
@@ -856,6 +860,7 @@ library_df <- library_df %>%
       )
     )
 
+head(library_df )
 # generate a box Plot
 
 library_size_box_plot <- ggplot(library_df, aes(x = "", y = Library_Size, colour = Outlier)) +
@@ -905,7 +910,7 @@ library_size_box_plot <- ggplot(library_df, aes(x = "", y = Library_Size, colour
     legend.text = element_text(size = 12
   )
   )
-
+library_size_box_plot
 
 # call the ggsave function
 save_plot_with_ggsave(
@@ -1056,8 +1061,9 @@ mat_loading <- pca_loading[gene_vars > 0, ]
 pca_loading_mat <- prcomp(t(mat_loading), scale. = F)
 
 # contains different dfs 
-
-#head(pca_loading_mat)
+gene_info_pca <- gene_info[rownames(mat_loading),
+                           ,drop = FALSE
+                           ]
 
 # PCA loadings 
 pca_loading_df <- as.data.frame(pca_loading_mat$rotation)
@@ -1066,7 +1072,7 @@ pca_loading_df <- as.data.frame(pca_loading_mat$rotation)
 # cleaning up the df 
 
 pca_loading_clean <- data.frame(ensembl_id = rownames(pca_loading_mat$rotation),
-                                symbol     = gene_info$symbol, 
+                                symbol     = gene_info_pca$symbol ,
                                 PC1        = pca_loading_mat$rotation[, "PC1"],
                                 PC2        = pca_loading_mat$rotation[, "PC2"],
                                 stringsAsFactors = FALSE
