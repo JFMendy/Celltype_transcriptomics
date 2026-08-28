@@ -100,6 +100,7 @@ __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformat
 - __scales:__ used for formatting axesand scaling of colours for plots
 - __grid:__ provide graphic functions for plots
 - __gridExtra:__ manages multiple plots
+- 
 
 ***Tables***
 - __gt:__ used to generate summary tables
