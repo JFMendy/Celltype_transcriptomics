@@ -402,7 +402,7 @@ doublet_tbl <- doublet_summary %>%
              ) %>%
   
   tab_header(title = md(""),
-             subtitle = md("**scDblFinder analysis of the single-cell RNA-seq dataset**")
+             subtitle = md("**Single-cell double assessment**")
              ) %>%
   
   cols_label(Category = "Category",
@@ -1442,6 +1442,34 @@ head(top_bulk_genes)
 
 # top 25 genes from scrna RNA-seq  
 head(top25_scrna_all) 
+
+compare_gene_lists <- function(list_bulk, list_scrna) {
+  
+  # find common genes
+  common_genes <- intersect(list_bulk, list_scrna)
+  
+  cat("Genes common between bulk and scRNA:\n")
+  print(common_genes)
+  
+  # genes in bulk not in scRNA
+  not_in_scrna <- setdiff(list_bulk, list_scrna)
+  cat("\nGenes in bulk but not in scRNA:\n")
+  print(not_in_scrna)
+  
+  # genes in scRNA not in bulk
+  not_in_bulk <- setdiff(list_scrna, list_bulk)
+  cat("\nGenes in scRNA but not in bulk:\n")
+  print(not_in_bulk)
+  
+  # return a list with all three sets for further use
+  invisible(list(common = common_genes,
+                 bulk_only = not_in_scrna,
+                 scrna_only = not_in_bulk))
+}
+
+
+
+
 
 
 
