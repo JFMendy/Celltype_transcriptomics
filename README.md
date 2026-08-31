@@ -32,13 +32,13 @@ The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://z
 - data/scRNASeq/hsobj_20221209_annotated.rds
 
 ### R environment setup:
-### System & Software Prerequisites
+#### System & Software Prerequisites
 - R version 4.4.3
 - RStudio (recommended)
 - Git & GitHub
 - Memory: High RAM capacity (at least 16 GB+ recommended) to load and process the 7 GB single-cell Seurat object
   
-### Dependencies management
+#### Dependencies management
 Package dependencies are managed via renv to ensure full environment reproducibility.
 1. Clone this repository:
 - git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
@@ -49,7 +49,7 @@ Package dependencies are managed via renv to ensure full environment reproducibi
 if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
 renv::restore()
 
-### Additional Rendering Dependencies
+#### Additional Rendering Dependencies
 The gt package and its rendering workflow may require additional dependencies, including webshot2, chromote, and a compatible Chrome/Chromium installation. If these dependencies are not available in the project environment, they can be installed using:
 
 renv::install(c("gt", "webshot2", "chromote", "websocket", "AsioHeaders"))
