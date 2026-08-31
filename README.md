@@ -32,15 +32,13 @@ The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://z
 - data/scRNASeq/hsobj_20221209_annotated.rds
 
 ### R environment setup:
-A project-specific renv was set up for analyses reproduciblity and package management. 
-System & Software Prerequisites
-
+### System & Software Prerequisites
 - R version 4.4.3
 - RStudio (recommended)
 - Git & GitHub
 - Memory: High RAM capacity (at least 16 GB+ recommended) to load and process the 7 GB single-cell Seurat object
-
-## R Environment Setup
+  
+### Dependencies management
 Package dependencies are managed via renv to ensure full environment reproducibility.
 1. Clone this repository:
 - git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
@@ -51,7 +49,7 @@ Package dependencies are managed via renv to ensure full environment reproducibi
 if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
 renv::restore()
 
-## Additional Rendering Dependencies
+### Additional Rendering Dependencies
 The gt package and its rendering workflow may require additional dependencies, including webshot2, chromote, and a compatible Chrome/Chromium installation. If these dependencies are not available in the project environment, they can be installed using:
 
 renv::install(c("gt", "webshot2", "chromote", "websocket", "AsioHeaders"))
@@ -79,18 +77,7 @@ source("codes/scrna_rscript.R")
 
 - __Intermediate objects__: Saved to result/
 
-### Software requirement
-- R Version: 4.4.3
-- RStudio version:
-- CRAN packages
-- Bioconductor packages
-- renv for dependency management
-- Git and Git Hub
-
-
-***reproducibility***
-- __renv:__ Manages the project-specific R environment and package versions
-
+## Core Packages Used
 ***Bulk RNA-seq Analysis***
 - __SummarizedExperiment:__ stores and manages all information (metadata) and the expression matrix for bulk RNA-seq analysis
 - __DESeq2:__ performs differential gene expression in bulk RNA-seq data
