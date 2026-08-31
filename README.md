@@ -24,13 +24,13 @@ The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://z
 ## Download & Setup Instructions
 1. Download the following processed data objects from the Zenodo repository link above:
 - se.rds: processed bulk RNA-seq data as a SummarizedExperiment object
-  
 - hsobj_20221209_annotated.rds: Processed scRNA-seq data stored as a Seurat object (approx. 7 GB)
 
 2. Place the downloaded files into their respective subfolders within the data/ directory
 
-data/bulkRNASeq/se.rds
-data/scRNASeq/hsobj_20221209_annotated.rds
+- data/bulkRNASeq/se.rds
+
+- data/scRNASeq/hsobj_20221209_annotated.rds
 
 ### R environment setup:
 A project-specific renv was set up for analyses reproduciblity and package management. 
