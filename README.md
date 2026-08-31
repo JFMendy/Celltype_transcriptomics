@@ -29,11 +29,26 @@ The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://z
 2. Place the downloaded files into their respective subfolders within the data/ directory
 
 - data/bulkRNASeq/se.rds
-
 - data/scRNASeq/hsobj_20221209_annotated.rds
 
 ### R environment setup:
 A project-specific renv was set up for analyses reproduciblity and package management. 
+System & Software Prerequisites
+
+- R version 4.4.3
+- RStudio (recommended)
+- Git & GitHub
+- Memory: High RAM capacity (at least 16 GB+ recommended) to load and process the 7 GB single-cell Seurat object
+
+R Environment Setup
+Package dependencies are managed via renv to ensure full environment reproducibility.
+
+git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
+
+
+
+
+
 To recreate these analyses: 
 - Use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/tree/main***
 - Open the ***MSc_thesis_analysis.Rproj***
