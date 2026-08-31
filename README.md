@@ -108,7 +108,8 @@ __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformat
 - __knitr:__ used for generating reports
 
 **Related Resources**
-In a nutshell: the source code can be found in the GitHub repository; the software release and data are on Zenodo, as stated below. 
+In a nutshell: the source code can be found on the GitHub repository; the software release and data are on Zenodo, as stated below. 
+
  __Source code:__
 https://github.com/JFMendy/MSc_thesis_analysis
 
