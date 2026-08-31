@@ -80,8 +80,6 @@ source("codes/scrna_rscript.R")
 
 ## Core Packages Used
 
-CategoryKey PackagesDescription / UsageBulk RNA-seqSummarizedExperiment, DESeq2, biomaRtData structure management, differential expression testing, Ensembl annotationsSingle-cellSeurat, prestoSingle-cell architecture, cell clustering, fast gene marker testingData Wranglingtidyverse (dplyr, tidyr, tibble)Data manipulation, transformation, and clean-upVisualizationggplot2, patchwork, ComplexHeatmap, circlize, factoextra, ggrepel, viridis, scales, grid, gridExtraPlot generation, layout composition, PCA visualisations, heatmapsReporting & Tablesgt, kableExtra, knitrTable formatting, HTML/PDF rendering
-
 
 To recreate these analyses: 
 - Use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/tree/main***
