@@ -42,10 +42,11 @@ System & Software Prerequisites
 
 ## R Environment Setup
 Package dependencies are managed via renv to ensure full environment reproducibility.
-
+1. Clone this repository:
 - git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
-- open MSc_thesis_analysis.Rproj in RStudio
-- Restore the R package environment by executing the following in your R console:
+  
+2. Open MSc_thesis_analysis.Rproj in RStudio
+3. Restore the R package environment by executing the following in your R console:
   
 if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
 renv::restore()
