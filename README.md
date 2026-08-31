@@ -63,6 +63,7 @@ The analysis pipeline must be executed sequentially
 source("codes/bulk_rscript.R")
 
 **Note:** This script creates an intermediate object in the global environment and saves a copy inside the result/ folder. This intermediate object is strictly required for the cross-methodological validation in the single-cell pipeline.
+
 2. Run Single-Cell RNA-Seq Analysis Second:
 
 source("codes/scrna_rscript.R")
