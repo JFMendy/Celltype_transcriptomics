@@ -19,6 +19,7 @@
   library(circlize)
   library(UpSetR)
   library(grid)
+  library(dplyr)
 
  
   
@@ -939,8 +940,8 @@ head(pca_data)
 
 # check PC loadings  
 
-pc1_loading <- desc(pca_data$PC1)
-
+#pc1_loading <- desc(pca_data$PC1)
+pc1_loading <- sort(pca_data$PC1, decreasing = TRUE)
 head(pc1_loading)
 
 #check number of sample per group again to draw an ellipse 
@@ -1091,11 +1092,11 @@ head(pca_loading_clean)
 #  arrange in descending order of PCs 
 
 top_pc1_pos <- pca_loading_clean %>%
-  arrange(desc(PC1)) %>%
-  select(symbol, PC1) %>%
-  slice_head(n = 5) %>%
-  rename(Loading = PC1) %>%
-  mutate(
+  dplyr::arrange(dplyr::desc(PC1)) %>%
+  dplyr::select(symbol, PC1) %>%
+  dplyr::slice_head(n = 5) %>%
+  dplyr::rename(Loading = PC1) %>%
+  dplyr::mutate(
     PC = "PC1",
     Direction = "Positive"
   )
@@ -1105,39 +1106,44 @@ head(top_pc1_pos)
 
 # top neg pcs of PC1 
 top_pc1_neg <- pca_loading_clean %>%
-  arrange(PC1) %>%
-  select(symbol, PC1) %>%
-  slice_head(n = 5) %>%
-  rename(Loading = PC1) %>%
-  mutate(
+  dplyr::arrange(PC1) %>%
+  dplyr::select(symbol, PC1) %>%
+  dplyr::slice_head(n = 5) %>%
+  dplyr::rename(Loading = PC1) %>%
+  dplyr::mutate(
     PC = "PC1",
     Direction = "Negative"
   )
 
+top_pc1_neg
 
 # top pcs pcs of PC2 
+colnames(pca_loading_clean)
 top_pc2_pos <- pca_loading_clean %>%
-  arrange(desc(PC2)) %>%
-  select(symbol, PC2) %>%
-  slice_head(n = 5) %>%
-  rename(Loading = PC2) %>%
-  mutate(
+  dplyr::arrange(dplyr::desc(PC2)) %>%
+  dplyr::select(symbol, PC2) %>%
+  dplyr::slice_head(n = 5) %>%
+  dplyr::rename(Loading = PC2) %>%
+  dplyr::mutate(
     PC = "PC2",
     Direction = "Positive"
   )
 
+top_pc2_pos
+
 
 # top neg PC2 
 top_pc2_neg <- pca_loading_clean %>%
-  arrange(PC2) %>%
-  select(symbol, PC2) %>%
-  slice_head(n = 5) %>%
-  rename(Loading = PC2) %>%
-  mutate(
+  dplyr::arrange(PC2) %>%
+  dplyr::select(symbol, PC2) %>%
+  dplyr::slice_head(n = 5) %>%
+  dplyr::rename(Loading = PC2) %>%
+  dplyr::mutate(
     PC = "PC2",
     Direction = "Negative"
   )
 
+top_pc2_neg
 
 
 
@@ -2463,14 +2469,14 @@ pairwise_output$summary
 
 # convert the summary from get_pairwise function into table 
 summary_tbl <- pairwise_output$summary %>%
-  arrange(comparison)
+  dplyr::arrange(comparison)
 
 
 colnames(pairwise_output$summary)
 
 # rename the table columns  
 summary_tbl1 <- summary_tbl %>%
-  rename(
+  dplyr::rename(
     Comparison = comparison,
     `Up-regulated in Cell1` = n_higher_in_cell1,
     `Up-regulated in Cell2` = n_higher_in_cell2,
@@ -2667,7 +2673,7 @@ marker_gene_gt <- cell_gene_horizontal %>%
   
   # rename columns
   cols_label(Cell = "Cell Type",
-             Genes = "Top 25 Marker Genes"
+             Genes = "Top 25 Marker Genes in Bulk RNA-seq"
              ) %>%
   
   # centre and bold the column labels 
@@ -2815,15 +2821,19 @@ top3_stats_summary
 
 # format the table for display
 formatted_top3 <- top3_stats_summary %>%
-  rename(
+  dplyr::rename(
     `Cell Type` = cell_type,
     `Gene Symbol` = symbol,
     `log2 Fold Change` = log2FoldChange,
     `Adjusted p-value` = padj
   ) %>%
-  mutate(
+  dplyr::mutate(
     `log2 Fold Change` = round(`log2 Fold Change`, 2),
-    `Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 2)
+    `Adjusted p-value` = formatC(
+      `Adjusted p-value`,
+      format = "e",
+      digits = 2
+    )
   )
 
 # view the result
@@ -2945,13 +2955,13 @@ gtsave(
 # 5.5 Heat map visualisation ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # again pick the top 3 genes from each cell type and make global heatmap to show gene cell type association 
-top3_combine_genes <- imap_dfr(cell_dfs, ~ { .x %>%
+top3_combine_genes <- purrr::imap_dfr(cell_dfs, ~ { .x %>%
     
     # take first 3 rows
-    slice_head(n = 3) %>%  
+    dplyr::mutate(n = 3) %>%  
     
     # remember which df it was from
-    mutate(source = .y)
+    dplyr::mutate(source = .y)
   })                        
 
 top3_combine_genes
@@ -3122,6 +3132,7 @@ for (i in names(heatmap_list)) {
     height = 6
   )
 }
+
 
 
 
