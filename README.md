@@ -17,18 +17,19 @@ This repository also includes computational analysis R scripts used for these an
 - The processed datasets used in the analyses are not found on GitHub but on Zenodo. Only the scripts and plots are on GitHub.
 - Also, both datasets are not tracked by git.  
   
-### How to access the data used for this analysis
-Due to the large scRNA-seq file, both files were stored in Zenodo rather than GitHub. 
-And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**" or DOI: **10.5281/zenodo.21398652**.
-When the files are downloaded, "se.rds"  => processed bulk RNA-seq SummarizedExperiment object and "hsobj_20221209_annotated.rds" => processed scRNA-seq Seurat object. 
-The subfolders of these files should be placed in the "data" folder in the repository. 
+### Data Access & Placement
+Due to the large size of the scRNA-seq dataset, both the bulk RNA-seq and scRNA-seq datasets are hosted on Zenodo rather than GitHub. 
+The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**".
 
-### File paths: 
-Following the downloads, file paths would be: 
-- se.rds => ***data/bulkRNASeq/se.rds***  
-- hsobj_20221209_annotated.rds => ***data/scRNASeq/hsobj_20221209_annotated.rds***
-- bulk RNA-seq analysis source code => ***codes/bulk_rscript.R***
-- Single-cell RNA-seq analysis => ***codes/scrna_rscript.R***
+## Download & Setup Instructions
+1. Download the following processed data objects from the Zenodo repository link above:
+- se.rds: processed bulk RNA-seq data as a SummarizedExperiment object
+- hsobj_20221209_annotated.rds: Processed scRNA-seq data stored as a Seurat object (approx. 7 GB)
+
+2. Place the downloaded files into their respective subfolders within the data/ directory
+
+data/bulkRNASeq/se.rds
+data/scRNASeq/hsobj_20221209_annotated.rds
 
 ### R environment setup:
 A project-specific renv was set up for analyses reproduciblity and package management. 
