@@ -18,7 +18,7 @@ This repository also included computational analysis R scripts used for these an
 - Also both datasets are not tracked by git.  
   
 ### How to access the used data for this analysis
-Due to the large scRNA-seq file, both files were stored in Zenodo. And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**". When the files are downloaded, "se.rds"  => bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => scRNA-seq Seurat object. The subfolders of this files should be placed in the "data" folder in repository. 
+Due to the large scRNA-seq file, both files were stored in Zenodo. And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**" or DOI:**10.5281/zenodo.21398652**. When the files are downloaded, "se.rds"  => bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => scRNA-seq Seurat object. The subfolders of this files should be placed in the "data" folder in repository. 
 
 ### File paths: 
 Following the downloads, file paths would be: 
@@ -64,7 +64,7 @@ During the running of the source codes, each script automatically generate's fig
 The packages were obtained from CRAN and Bioconductor. The Bioconductor packages were also managed through **BiocManager** as well renv.lock file.
 - ***Dependencies:*** 
 The following packages require dependencies as indicated by the arrow: 
-gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above mentioned packages are not working as expected. Then run these two codes to get it running as expected.
+gt packages needs => webshot2 => chromote => chrome(google chrome) /chromium => websocket => AsioHeaders and zip  to work properly. Therefore, this code would be needed if the above-mentioned packages are not working as expected. Then run these two codes to get it running as expected.
    - __renv::install(c("gt",
 "webshot2",
 "chromote",
@@ -108,3 +108,12 @@ __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformat
 - __knitr:__ used for generating reports
 
 
+**Related Resources**
+
+ __Source code:__
+https://github.com/JFMendy/MSc_thesis_analysis
+
+__Analysis software release:__
+Zenodo DOI: 10.5281/zenodo.22211143
+__Processed bulk and single-cell RNA-seq data:__
+Zenodo DOI: 10.5281/zenodo.21398652
