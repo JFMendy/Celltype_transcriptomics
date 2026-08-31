@@ -2952,6 +2952,7 @@ gtsave(
 
 
 
+
 # 5.5 Heat map visualisation ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 # again pick the top 3 genes from each cell type and make global heatmap to show gene cell type association 

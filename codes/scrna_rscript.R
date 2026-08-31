@@ -14,6 +14,8 @@
   library(patchwork)
   library(SingleCellExperiment)
   library(scDblFinder)
+  library(gridExtra)
+  library(grid)
 }
 
 
@@ -205,7 +207,7 @@ sce <- scDblFinder(sce,
                    )
 
 
-# add scDblFinder results back to the Seurat object
+ # add scDblFinder results back to the Seurat object
 single_cell_data2$scDblFinder.score <- sce$scDblFinder.score
 single_cell_data2$scDblFinder.class <- sce$scDblFinder.class
 
@@ -326,7 +328,7 @@ ggsave(
   units = "in"
 )
 
-
+rm(doublet_score_plot)
 
 
 # generate doublets summary table 
@@ -447,7 +449,7 @@ gtsave(
   vheight = 1000
   )
 
-
+rm(doublet_tbl, doublet_summary)
 # cleaning the data 
 
 #subset and create clean subseurat object
@@ -553,7 +555,7 @@ ggsave(
     
 #free space 
 
-rm(doublet_summary, doublet_score_plot, doublet_tbl, sce)
+rm(qc_scatter_before, qc_violin_before, scatter_counts_mt_before, scatter_counts_features_before)
 rm(single_cell_data2, sce)
 # 4 normalization ===========================================================================================================================================
 
@@ -658,7 +660,7 @@ scrna_save_plot_with_ggsave(
 )
 
 # clear more space 
-rm(plot1,plot2,qc_scatter_before,qc_scatter_after, scatter_counts_features_after, scatter_counts_mt_after, top10)
+rm(plot1,plot2, top10,scrna_top_var_genes)
 
 # 8 PCA Analysis =====================================================================================================================================================
 
@@ -737,7 +739,7 @@ gtsave(
   vheight = 100
 )
 
-
+rm(pca_std_tbl)
 
 ## PCA Plot using dimplot 
 
@@ -799,7 +801,7 @@ scrna_save_plot_with_ggsave(
   height = 8
 )
 
-
+rm(scrrna_pca)
 # to determine the best PCs to choose, use a screeplot/elbowplot
 
 # extract PCA standard deviations manually
@@ -859,7 +861,7 @@ scrna_save_plot_with_ggsave(
 )
 
 
-
+rm(scrna_elbow_plot)
 
 # 9 clustering ======================================================================================================================================================
 
@@ -1350,7 +1352,6 @@ marker_table_gt
 
 
 
-
 gtsave(
   marker_table_gt,
   "plots/scrna_plot/scrna_marker_table_gt.pdf",
@@ -1424,9 +1425,8 @@ top3_markers_scrna_gt <- top3_markers_scrna %>%
 
 top3_markers_scrna_gt
 
-
 gtsave(
-  top3_markers_scrna_gt,
+ top3_markers_scrna_gt,
   "plots/scrna_plot/top3_markers_scrna_gt.pdf",
   vwidth = 100,
   vheight = 100
@@ -1573,6 +1573,9 @@ comparison_table_gt <- comparison_table %>%
 
 comparison_table_gt
 
+
+
+
 gtsave(
   comparison_table_gt,
   filename = "plots/scrna_plot/comparison_table_gt.pdf",
@@ -1688,7 +1691,7 @@ scrna_save_plot_with_ggsave(
   height = 6
 )
 
-# 9. statistical performance of the genes ----
+# 13. statistical performance of the genes ----
 
 #statistical performance of each genes
 
@@ -1902,12 +1905,12 @@ styled_table
 # the statistics performance 
 gtsave(
   styled_table,
-  filename = "plots/scrna_plot/cDC1_marker_statistics.pdf"
+ filename = "plots/scrna_plot/cDC1_marker_statistics.pdf"
   )
+ 
 
 
-
-
+ 
 
 
 
