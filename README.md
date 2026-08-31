@@ -7,7 +7,7 @@
 
 ### Project goal:
 This repository contains my MSc thesis on Life Science Informatics analysis documentation. The project includes two sets of data: bulk RNA sequencing (bulk RNA-seq) and single-cell RNA sequencing (scRNA-seq).
-The project aimed to assess the capability of bulk RNA-seq as a standalone tool to characterise immune cells. Single-cell analysis was used to ascertain the results obtained from bulk RNA-seq. 
+The project aimed to assess the capability of bulk RNA-seq as a useful additional tool to characterise immune cells. Single-cell analysis was used to validate the results obtained from bulk RNA-seq. 
 This repository also included computational analysis R scripts used for these analyses.
 
 ### Data Files description:
