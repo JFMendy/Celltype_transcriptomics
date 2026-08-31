@@ -19,7 +19,7 @@ This repository also included computational analysis R scripts used for these an
   
 ### How to access the data used for this analysis
 Due to the large scRNA-seq file, both files were stored in Zenodo rather than GitHub. 
-And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**" or DOI:**10.5281/zenodo.21398652**. 
+And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**" or DOI: **10.5281/zenodo.21398652**.
 When the files are downloaded, "se.rds"  => processed bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => processed scRNA-seq Seurat object. 
 The subfolders of these files should be placed in the "data" folder in the repository. 
 
