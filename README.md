@@ -8,19 +8,19 @@
 ### Project goal:
 This repository contains my MSc thesis on Life Science Informatics analysis documentation. The project includes two sets of data: bulk RNA sequencing (bulk RNA-seq) and single-cell RNA sequencing (scRNA-seq).
 The project aimed to assess the capability of bulk RNA-seq as a useful additional tool to characterise immune cells. Single-cell analysis was used to validate the results obtained from bulk RNA-seq. 
-This repository also included computational analysis R scripts used for these analyses.
+This repository also includes computational analysis R scripts used for these analyses.
 
 ### Data Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
 - The single-cell RNA-seq data is stored as a Seurat object
 - Both objects contain expression data and associated metadata required for downstream analysis.
-- The processed datasets used in the analyses are not found on GitHub but on Zenodo. Only the scripts and plots are in GitHub.
+- The processed datasets used in the analyses are not found on GitHub but on Zenodo. Only the scripts and plots are on GitHub.
 - Also, both datasets are not tracked by git.  
   
 ### How to access the data used for this analysis
 Due to the large scRNA-seq file, both files were stored in Zenodo rather than GitHub. 
 And could be downloaded from this url: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**" or DOI: **10.5281/zenodo.21398652**.
-When the files are downloaded, "se.rds"  => processed bulk RNA-seq SummerisedExperiment object and "hsobj_20221209_annotated.rds" => processed scRNA-seq Seurat object. 
+When the files are downloaded, "se.rds"  => processed bulk RNA-seq SummarizedExperiment object and "hsobj_20221209_annotated.rds" => processed scRNA-seq Seurat object. 
 The subfolders of these files should be placed in the "data" folder in the repository. 
 
 ### File paths: 
@@ -33,8 +33,8 @@ Following the downloads, file paths would be:
 ### R environment setup:
 A project-specific renv was set up for analyses reproduciblity and package management. 
 To recreate these analyses: 
-- use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/tree/main***
-- open the ***MSc_thesis_analysis.Rproj***
+- Use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/tree/main***
+- Open the ***MSc_thesis_analysis.Rproj***
 - Run the following code in the R console:
   -***install.packages("renv")***
   -***renv::restore()***.
@@ -70,7 +70,7 @@ During the running of the source code, each script automatically generates figur
 ### Packages description and dependencies 
 
 The packages used in this project were obtained from CRAN and Bioconductor. 
-The Bioconductor packages were also managed through **BiocManager** as well as the renv.lock file.
+The Bioconductor packages were also managed through **BiocManager** as well as the renvlock file.
 
 - **Additional Dependencies**
 The gt package and its rendering workflow may require additional dependencies, including webshot2, chromote, and a compatible Chrome/Chromium installation. If these dependencies are not available in the project environment, they can be installed using:
@@ -113,12 +113,12 @@ __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformat
 
 ***Tables***
 - __gt:__ used to generate summary tables
-- __kableExtra:__ enhances the summary table in HTML and pdfs
+- __kableExtra:__ enhances the summary table in HTML and PDFs
 - __knitr:__ used for generating reports
 
 
 **Related Resources**
-
+In a nutshell: the source code can be found in the GitHub repository; the software release and data are on Zenodo, as stated below. 
  __Source code:__
 https://github.com/JFMendy/MSc_thesis_analysis
 
