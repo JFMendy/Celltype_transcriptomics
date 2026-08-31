@@ -52,7 +52,7 @@ if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
 renv::restore()
 
 ## Additional Rendering Dependencies
-If you encounter issues rendering summary tables with gt (such as PDF/image exports), install the supporting web-rendering dependencies:
+The gt package and its rendering workflow may require additional dependencies, including webshot2, chromote, and a compatible Chrome/Chromium installation. If these dependencies are not available in the project environment, they can be installed using:
 
 renv::install(c("gt", "webshot2", "chromote", "websocket", "AsioHeaders"))
 renv::snapshot()
@@ -79,37 +79,6 @@ source("codes/scrna_rscript.R")
 
 - __Intermediate objects__: Saved to result/
 
-
-## Core Packages Used
-
-
-To recreate these analyses: 
-- Use this code and link: ***https://github.com/JFMendy/MSc_thesis_analysis/tree/main***
-- Open the ***MSc_thesis_analysis.Rproj***
-- Run the following code in the R console:
-  -***install.packages("renv")***
-  -***renv::restore()***.
-    
-R will automatically install the exact required versions of packages and their dependencies used in this project, stored in the renv.lock file.
-
-### Running the analyses: 
-The analyses are structured sequentially. To recreate these analyses, the scripts should run as indicated below.
-1. bulk_rscript.R
-2. scrna_rscript.R
-   
-- The Seurat object is large (7GB); hence, it would need a large amount of memory (RAM) to load the data.
-- Note, first run the "bulk_rscript.R" then the "scrna_script.R"
-
-
-### Output Files 
-During the running of the source code, each script automatically generates figures, tables, and differential expression results. The generated plots and tables are stored as indicated. 
-
-- The bulk script would store its output in  => **plots/bulk_plot/**
-- While the single-cell script => **plots/scrna_plot/**
-- The immediate object from bulk_rscript.R is stored in **result** folder 
-
-**Note:** There is an intermediate object generated from the bulk RNA-seq source code in the global environment that is required for comparison with single-cell RNA-seq results. This intermediate object is saved in the result folder. Therefore, the bulk RNA-seq source code must be run first. Otherwise, the single-cell analysis would generate an error during the course of running. Each script also contains custom helper functions to perform repetitive analyses.
-
 ### Software requirement
 - R Version: 4.4.3
 - RStudio version:
@@ -118,21 +87,6 @@ During the running of the source code, each script automatically generates figur
 - renv for dependency management
 - Git and Git Hub
 
-### Packages description and dependencies 
-
-The packages used in this project were obtained from CRAN and Bioconductor. 
-The Bioconductor packages were also managed through **BiocManager** as well as the renvlock file.
-
-- **Additional Dependencies**
-The gt package and its rendering workflow may require additional dependencies, including webshot2, chromote, and a compatible Chrome/Chromium installation. If these dependencies are not available in the project environment, they can be installed using:
-
-   - __renv::install(c("gt",
-"webshot2",
-"chromote",
-"websocket",
-"AsioHeaders"
-))__
-   - __renv::snapshot()__
 
 ***reproducibility***
 - __renv:__ Manages the project-specific R environment and package versions
@@ -160,13 +114,11 @@ __tidyverse (dplyr, tidyr and tibble):__ used for data manipulation, transformat
 - __scales:__ used for formatting axes and scaling of colours for plots
 - __grid:__ provide graphic functions for plots
 - __gridExtra:__ manages multiple plots
-- 
 
 ***Tables***
 - __gt:__ used to generate summary tables
 - __kableExtra:__ enhances the summary table in HTML and PDFs
 - __knitr:__ used for generating reports
-
 
 **Related Resources**
 In a nutshell: the source code can be found in the GitHub repository; the software release and data are on Zenodo, as stated below. 
