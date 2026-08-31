@@ -40,13 +40,47 @@ System & Software Prerequisites
 - Git & GitHub
 - Memory: High RAM capacity (at least 16 GB+ recommended) to load and process the 7 GB single-cell Seurat object
 
-R Environment Setup
+## R Environment Setup
 Package dependencies are managed via renv to ensure full environment reproducibility.
 
-git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
+- git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
+- open MSc_thesis_analysis.Rproj in RStudio
+- Restore the R package environment by executing the following in your R console:
+  
+if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+renv::restore()
+
+## Additional Rendering Dependencies
+If you encounter issues rendering summary tables with gt (such as PDF/image exports), install the supporting web-rendering dependencies:
+
+renv::install(c("gt", "webshot2", "chromote", "websocket", "AsioHeaders"))
+renv::snapshot()
+
+## Execution Workflow
+The analysis pipeline must be executed sequentially
+1. Run Bulk RNA-Seq Analysis First:
+   
+source("codes/bulk_rscript.R")
+
+**Note:** This script creates an intermediate object in the global environment and saves a copy inside the result/ folder. This intermediate object is strictly required for the cross-methodological validation in the single-cell pipeline.
+2. Run Single-Cell RNA-Seq Analysis Second:
+
+source("codes/scrna_rscript.R")
+
+**Note:** Running scrna_rscript.R without first executing bulk_rscript.R will cause an error due to missing intermediate variables
+
+## Output Files
+
+- __Bulk RNA-seq plots & tables__: Saved to plots/bulk_plot/
+
+- __Single-cell RNA-seq plots & tables:__ Saved to plots/scrna_plot/
+
+- __Intermediate objects__: Saved to result/
 
 
+## Core Packages Used
 
+CategoryKey PackagesDescription / UsageBulk RNA-seqSummarizedExperiment, DESeq2, biomaRtData structure management, differential expression testing, Ensembl annotationsSingle-cellSeurat, prestoSingle-cell architecture, cell clustering, fast gene marker testingData Wranglingtidyverse (dplyr, tidyr, tibble)Data manipulation, transformation, and clean-upVisualizationggplot2, patchwork, ComplexHeatmap, circlize, factoextra, ggrepel, viridis, scales, grid, gridExtraPlot generation, layout composition, PCA visualisations, heatmapsReporting & Tablesgt, kableExtra, knitrTable formatting, HTML/PDF rendering
 
 
 To recreate these analyses: 
