@@ -124,5 +124,6 @@ https://github.com/JFMendy/MSc_thesis_analysis
 
 __Analysis software release:__
 Zenodo DOI: 10.5281/zenodo.22211143
+
 __Processed bulk and single-cell RNA-seq data:__
 Zenodo DOI: 10.5281/zenodo.21398652
