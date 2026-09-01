@@ -17,7 +17,7 @@ This repository also includes computational analysis R scripts used for these an
 - The processed datasets used in the analyses are not found on GitHub but on Zenodo. Only the scripts and plots are on GitHub.
 - Also, both datasets are not tracked by git.  
   
-### Data Access & Placement
+### Data Access and Placement
 Due to the large size of the scRNA-seq dataset, both the bulk RNA-seq and scRNA-seq datasets are hosted on Zenodo rather than GitHub. 
 The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://zenodo.org/uploads/21398652)**".
 
