@@ -68,6 +68,27 @@ The single-cell analysis enabled further examination of cellular heterogeneity a
 | Reproducibility | Git, GitHub, renv | Version control and reproducibility |
 
 
+### Repository Structure
+flowchart TD
+    A["Celltype_transcriptomics"] --> B["codes/"]
+    A --> C["data/"]
+    A --> D["plots/"]
+    A --> E["results/"]
+    A --> F["renv/"]
+    A --> G["README.md"]
+    A --> H["renv.lock"]
+
+    B --> B1["bulk_rscript.R"]
+    B --> B2["scrna_rscript.R"]
+
+    C --> C1["bulkRNASeq/"]
+    C --> C2["scRNASeq/"]
+
+    D --> D1["bulk_plot/"]
+    D --> D2["scrna_plot/"]
+
+    C1 --> C3["SummarizedExperiment"]
+    C2 --> C4["Seurat object"]
 
 
 
