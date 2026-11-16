@@ -58,7 +58,13 @@ The single-cell analysis enabled further examination of cellular heterogeneity a
    - FACS was used as an additional experimental approach to examine immune-cell populations through established surface-   marker expression.
 
 ### Technologies and Tools
-
+| Analysis Area | Tools | Purpose |
+|---|---|---|
+| Programming | R | Statistical computing |
+| Bulk RNA-seq | DESeq2 | Differential gene expression |
+| Single-cell RNA-seq | Seurat | Single-cell analysis |
+| Data visualisation | ggplot2 | Generate scientific plots |
+| Reproducibility | Git, GitHub, renv | Version control and reproducibility |
 
 
 
