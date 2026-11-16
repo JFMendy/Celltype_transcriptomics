@@ -1,21 +1,75 @@
 ## Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
-> **Master of Science (MSc) Thesis Analysis**  
+> **Master of Science (MSc) Thesis Project| Life Science Informatics**  
 > **Author:** Joseph F Mendy  
-> **Contact:** joseph.mendy@stud.th-deg.de / dakichanco@gmail.com
 > 
 > **Institution:** Deggendorf Institute of Technology
 
-### Project goal:
-This repository contains my MSc thesis on Life Science Informatics analysis documentation. The project includes two sets of data: bulk RNA sequencing (bulk RNA-seq) and single-cell RNA sequencing (scRNA-seq).
-The project aimed to assess the capability of bulk RNA-seq as a useful additional tool to characterise immune cells. Single-cell analysis was used to validate the results obtained from bulk RNA-seq. 
-This repository also includes computational analysis R scripts used for these analyses.
+### Project Overview:
+This project investigates the transcriptomic characteristics of nine peripheral blood mononuclear cell (PBMC) immune-cell populations using bulk RNA sequencing (bulk RNA-seq), followed by further characterisation using single-cell RNA sequencing (scRNA-seq) and fluorescence-activated cell sorting (FACS)
+
+The primary objective was to investigate the potential of bulk RNA-seq as a tool for characterising distinct immune-cell populations based on their gene-expression profiles
+
+Single-cell transcriptomic analysis provided additional resolution of cellular heterogeneity and enabled the examination of cell-type-specific gene-expression patterns. FACS provided an additional experimental approach to characterising immune-cell populations using surface markers
+
+Single-cell transcriptomic analysis provided additional resolution of cellular heterogeneity and enabled the examination of cell-type-specific gene-expression patterns. FACS provided another approach to characterising immune-cell populations using surface markers.
+
+The project integrates experimental immunology with computational transcriptomics to investigate immune-cell identity and gene-expression signatures.
+
+### Research Objectives 
+1. Characterise nine PBMC immune-cell populations using bulk RNA-seq.
+2. Identify differentially expressed genes and population-specific molecular signatures.
+3. Further investigate immune-cell heterogeneity and marker expression using scRNA-seq.
+4. Examine the correspondence between transcriptomic findings and established immune-cell markers.
+5. Do the identified markers encode surface proteins used in the FACS panel? 
+
+### Immune cells of interest
+The bulk RNA-seq analysis investigated nine immune-cell populations:
+-- B cells
+-- Conventional dendritic cells type 1 (cDC1)
+-- Conventional dendritic cells type 2 (cDC2)
+-- Dendritic cells type 3 (DC3)
+-- Monocytes type 1 (mo1)
+-- Monocytes type 2 (mo2)
+-- Intermediate monocytes (moint)
+-- Plasmacytoid dendritic cells (pDC)
+-- Transitional dendritic cells (tDC)
+
+The single-cell analysis enabled further examination of cellular heterogeneity and immune-cell subpopulations.
+### Computational Workflow
+1. Bulk RNA-seq Analysis
+   - Expression data preparation and quality assessment
+   - Gene filtering and data preprocessing
+   - Variance-stabilising transformation
+   - Principal component analysis (PCA)
+   - Differential gene expression analysis using DESeq2
+   - Identification of population-specific gene-expression signatures
+   - Visualisation of differentially expressed genes
+
+2. Single-Cell RNA-seq Analysis
+   - Quality control and filtering
+   - Doublet detection using scDblFinder
+   - Data normalisation and highly variable gene selection
+   - Dimensionality reduction using PCA and UMAP
+   - Cell clustering and population characterisation
+   - Identification of differentially expressed genes and cell-type markers
+   - Visualisation of cellular heterogeneity
+
+3. Experimental Characterisation
+   - FACS was used as an additional experimental approach to examine immune-cell populations through established surface-   marker expression.
+
+### Technologies and Tools
+
+
+
+
+
 
 ### Data Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
 - The single-cell RNA-seq data is stored as a Seurat object
 - Both objects contain expression data and associated metadata required for downstream analysis.
 - The processed datasets used in the analyses are not found on GitHub but on Zenodo. Only the scripts and plots are on GitHub.
-- Also, both datasets are not tracked by git.  
+- Also, neither dataset is tracked by git.  
   
 ### Data Access and Placement
 Due to the large size of the scRNA-seq dataset, both the bulk RNA-seq and scRNA-seq datasets are hosted on Zenodo rather than GitHub. 
