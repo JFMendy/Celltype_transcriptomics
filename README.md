@@ -1,4 +1,4 @@
-## Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
+## Transcriptomic Characterisation of Human PBMC Immune-Cell Populations Using Bulk and Single-Cell RNA Sequencing
 > **Master of Science (MSc) Thesis Project| Life Science Informatics**  
 > **Author:** Joseph F Mendy  
 > 
