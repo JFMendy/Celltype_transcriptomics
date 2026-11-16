@@ -41,7 +41,7 @@ The data can be downloaded from this DOI: "**[10.5281/zenodo.21398652](https://z
 #### Dependencies management
 Package dependencies are managed via renv to ensure full environment reproducibility.
 1. Clone this repository:
-- git clone [https://github.com/JFMendy/MSc_thesis_analysis.git](https://github.com/JFMendy/MSc_thesis_analysis.git)
+- git clone [https://github.com/JFMendy/Celltype_transcriptomics.git](https://github.com/JFMendy/Celltype_transcriptomics.git)
   
 2. Open MSc_thesis_analysis.Rproj in RStudio
 3. Restore the R package environment by executing the following in your R console:
