@@ -69,6 +69,10 @@ The single-cell analysis enabled further examination of cellular heterogeneity a
 
 
 ### Repository Structure
+
+
+
+```mermaid
 flowchart TD
     A["Celltype_transcriptomics"] --> B["codes/"]
     A --> C["data/"]
@@ -89,6 +93,8 @@ flowchart TD
 
     C1 --> C3["SummarizedExperiment"]
     C2 --> C4["Seurat object"]
+```
+
 
 
 
