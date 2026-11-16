@@ -24,15 +24,15 @@ The project integrates experimental immunology with computational transcriptomic
 
 ### Immune cells of interest
 The bulk RNA-seq analysis investigated nine immune-cell populations:
--- B cells
--- Conventional dendritic cells type 1 (cDC1)
--- Conventional dendritic cells type 2 (cDC2)
--- Dendritic cells type 3 (DC3)
--- Monocytes type 1 (mo1)
--- Monocytes type 2 (mo2)
--- Intermediate monocytes (moint)
--- Plasmacytoid dendritic cells (pDC)
--- Transitional dendritic cells (tDC)
+- B cells
+- Conventional dendritic cells type 1 (cDC1)
+- Conventional dendritic cells type 2 (cDC2)
+- Dendritic cells type 3 (DC3)
+- Monocytes type 1 (mo1)
+- Monocytes type 2 (mo2)
+- Intermediate monocytes (moint)
+- Plasmacytoid dendritic cells (pDC)
+- Transitional dendritic cells (tDC)
 
 The single-cell analysis enabled further examination of cellular heterogeneity and immune-cell subpopulations.
 ### Computational Workflow
