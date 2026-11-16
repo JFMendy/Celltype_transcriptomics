@@ -1,7 +1,7 @@
 ## Comparative transcriptomic analysis of marker expression in different cell types using bulk RNA-seq and single-cell profiling
 > **Master of Science (MSc) Thesis Analysis**  
 > **Author:** Joseph F Mendy  
-> **Contact:** joseph.mendy@stud.th-deg.de
+> **Contact:** joseph.mendy@stud.th-deg.de / dakichanco@gmail.com
 > 
 > **Institution:** Deggendorf Institute of Technology
 
