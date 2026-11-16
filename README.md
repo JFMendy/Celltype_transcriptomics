@@ -98,6 +98,63 @@ flowchart TD
 
 
 
+
+
+
+
+
+
+
+The single-cell Seurat object is approximately 7 GB.
+
+### Running the Analysis
+
+The analysis scripts are designed to run sequentially in the same R session.
+
+##### Step 1: Bulk RNA-seq analysis
+
+source("codes/bulk_rscript.R")
+
+##### Step 2: Single-cell RNA-seq analysis
+
+source("codes/scrna_rscript.R")
+
+Run the bulk analysis first because the current single-cell workflow depends on intermediate objects generated during the bulk analysis.
+
+### Output Files
+
+The analysis generates plots, tables and intermediate results in the project directories:
+
+- plots/bulk_plot/ – Bulk RNA-seq visualisations.
+
+- plots/scrna_plot/ – Single-cell RNA-seq visualisations.
+
+- results/ – Intermediate analysis objects and results.
+
+### Software and Data Releases
+
+- GitHub source code: Celltype_transcriptomics
+
+- Software release: Zenodo DOI: 10.5281/zenodo.22211143
+
+- Processed datasets: Zenodo DOI: 10.5281/zenodo.21398652
+
+### Research Significance
+
+This project demonstrates the application of computational transcriptomics to immune-cell characterisation, combining bulk and single-cell RNA sequencing with experimental immunophenotyping.
+
+It highlights the use of statistical analysis, differential gene expression, dimensionality reduction, clustering and molecular marker identification to investigate immune-cell identity.
+
+### Author
+
+Joseph F. Mendy
+MSc Life Science Informatics
+MSc Molecular Biology
+
+Research interests: Bioinformatics, Computational Biology, Computational Immunology, Transcriptomics and Infectious Disease Research.
+
+
+
 ### Data Files description:
 - The processed bulk RNA-seq data is stored as a SummarizedExperiment object
 - The single-cell RNA-seq data is stored as a Seurat object
